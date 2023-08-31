@@ -27,14 +27,5 @@ fun initApp(environment: AppModelEnvironment, isDebugMode: Boolean, appDeclarati
     return initKoinApp(
         SharedApp().appModule,
         { AppModelImpl(environment) },
-        environment,
-        isDebugMode,
-        CommonStringsProviderImpl(),
-        appDeclaration
     )
-}
-
-private class CommonStringsProviderImpl: CommonStringsProvider {
-    override val errorNoConnection: String = "TODO"
-    override val errorUnknown: String = "TODO"
 }
