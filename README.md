@@ -2,6 +2,12 @@
 
 FiFi is a Kotlin Multiplatform Mobile (KMM) framework designed to facilitate maximum code sharing between iOS and Android, focusing on almost everything except UI and navigation code. With FiFi, you can write network requests, caching mechanisms, view models, business logic, and event handling all in shared code, allowing for a seamless development experience across platforms.
 
+## EARLY DEVELOPMENT!
+
+FiFi is currently in early development. The API is not stable and is subject to change. We are actively working on the framework and will be working on documentation and examples in the near future.
+
+We encourage you to try out FiFi and provide feedback. If you have any questions, please reach out to us.
+
 ## Key Features
 * **Maximum Code Sharing**: Write most of your app logic once and run on both iOS and Android.
 * **Built on Proven Libraries**: Utilizes Kotlin serialization, Kotlin date time, Ktor, and Koin.
@@ -63,3 +69,7 @@ fun <ModelData, Environment: ModelEnvironment, UserId, AccessTokenClaims: Identi
     appDeclaration: KoinAppDeclaration = {}
 )
 ```
+
+# Contributing
+
+We welcome contributions to FiFi. Please read our [contributing guide](CONTRIBUTING.md) for more information.
