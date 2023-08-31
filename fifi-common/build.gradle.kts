@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     kotlin("plugin.serialization")
-    id("maven-publish")
+    id("convention.publication")
 }
 
 group = "com.paoapps.fifi"

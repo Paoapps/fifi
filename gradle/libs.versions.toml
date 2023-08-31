@@ -19,7 +19,6 @@ kswift = "0.6.0"
 korio = { module = "com.soywiz.korlibs.korio:korio", version.ref = "korio" }
 
 kermit = "1.0.0"
-firebase = "31.0.1"
 
 androidx-biometric = "1.1.0"
 androidx-appcompat = "1.4.1"
@@ -95,13 +94,6 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidx-biometric" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version = "1.1.0-alpha03" }
 
-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase" }
-firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
-firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
-firebase-config = { module = "com.google.firebase:firebase-config-ktx" }
-firebase-firestore = { module = "com.google.firebase:firebase-firestore-ktx" }
-
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version = "2.9.0" }
 image-loading-glide = { module = "com.github.skydoves:landscapist-glide", version = "1.3.2"}
 
@@ -115,7 +107,6 @@ quartz-scheduler = { module = "org.quartz-scheduler:quartz", version.ref = "quar
 plugins = ["plugin-android", "plugin-kotlin", "plugin-kotlin-serialization", "plugin-gver"]
 ktor-common = ["ktor-client-core", "ktor-client-logging", "ktor-client-serialization", "ktor-client-contentNegotiation"]
 commonAndroid = ["androidx-biometric", "androidx-appcompat"]
-firebase = ["firebase-analytics", "firebase-crashlytics", "firebase-messaging", "firebase-config", "firebase-firestore"]
 android = [
     "retrofit-converter-gson",
     "image-loading-glide",

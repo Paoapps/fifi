@@ -11,10 +11,10 @@ import kotlinx.coroutines.flow.map
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-open class ClientApiImpl<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims, ServerError: Any>(
-    final override val environment: ModelEnvironment,
+open class ClientApiImpl<Environment: ModelEnvironment, AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims, ServerError: Any>(
+    final override val environment: Environment,
     appVersion: String,
-    apiKey: String
+    additionalHeaders: Map<String, String> = emptyMap(),
 ): KoinComponent, ClientApi<AccessTokenClaims> {
 
     val tokensStore: TokenStore by inject()
@@ -23,5 +23,5 @@ open class ClientApiImpl<AccessTokenClaims: IdentifiableClaims, RefreshTokenClai
     val tokensFlow = MutableStateFlow(tokensStore.loadTokens(environment))
     override val claimsFlow: Flow<AccessTokenClaims?> = tokensFlow.map { it?.accessToken?.let(tokenDecoder::accessTokenClaims) }.distinctUntilChanged()
 
-    protected val apiHelper = ApiHelper<AccessTokenClaims, RefreshTokenClaims, ServerError>(tokensFlow, environment, appVersion, apiKey)
+    protected val apiHelper = ApiHelper<AccessTokenClaims, RefreshTokenClaims, ServerError>(tokensFlow, environment, appVersion, additionalHeaders)
 }

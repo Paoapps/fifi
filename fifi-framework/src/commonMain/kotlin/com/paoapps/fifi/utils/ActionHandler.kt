@@ -13,14 +13,7 @@ interface Emitter<A, E> {
     fun action(action: A)
 }
 
-sealed class GlobalAction {
-    data class Call(val phoneNumber: String): GlobalAction()
-    data class Email(val emailAddress: String): GlobalAction()
-    data class Web(val url: String, val external: Boolean): GlobalAction()
-    data class Copy(val text: String): GlobalAction()
-}
-
-data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: suspend (E, Any?) -> EventResult<A, E>?) {
+data class ActionHandler<A, E, GlobalAction>(val scope: CoroutineScope, private val handler: suspend (E, Any?) -> EventResult<A, E, GlobalAction>?) {
 
     val notificationsFlow = MutableSharedFlow<ToastDefinition.Properties>()
     val notifications = notificationsFlow.asSharedFlow().wrap(scope)
@@ -39,13 +32,13 @@ data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: s
     private val _confirmationDialogs = MutableSharedFlow<ConfirmationDialogDefinition.Properties<E>>()
     val confirmationDialogs = _confirmationDialogs.asSharedFlow().wrap(scope)
 
-    sealed interface EventResult<A, E> {
-        data class Event<A, E>(val event: E): EventResult<A, E>
-        data class Action<A, E>(val action: A): EventResult<A, E>
-//        data class Link<A, E>(val link: String): EventResult<A, E>
-        data class ConfirmationDialog<A, E>(val confirmationDialog: ConfirmationDialogDefinition.Properties<E>): EventResult<A, E>
-        data class Toast<A, E>(val properties: ToastDefinition.Properties): EventResult<A, E>
-        data class Global<A, E>(val action: GlobalAction): EventResult<A, E>
+    sealed interface EventResult<A, E, GlobalAction> {
+        data class Event<A, E, GlobalAction>(val event: E): EventResult<A, E, GlobalAction>
+        data class Action<A, E, GlobalAction>(val action: A): EventResult<A, E, GlobalAction>
+//        data class Link<A, E>(val link: String): EventResult<A, E, GlobalAction>
+        data class ConfirmationDialog<A, E, GlobalAction>(val confirmationDialog: ConfirmationDialogDefinition.Properties<E>): EventResult<A, E, GlobalAction>
+        data class Toast<A, E, GlobalAction>(val properties: ToastDefinition.Properties): EventResult<A, E, GlobalAction>
+        data class Global<A, E, GlobalAction>(val action: GlobalAction): EventResult<A, E, GlobalAction>
     }
 
     init {

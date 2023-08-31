@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     kotlin("plugin.serialization")
-    id("maven-publish")
+    id("convention.publication")
 }
 
 group = "com.paoapps.fifi"
@@ -16,10 +16,6 @@ val koinVersion = "3.4.3"
 val dateTimeVersion = "0.4.0"
 val kermitVersion = "1.0.0"
 val lifecycleVersion = "2.2.0"
-
-dependencies {
-    implementation(platform(libs.firebase.bom))
-}
 
 kotlin {
     android {
@@ -84,7 +80,9 @@ kotlin {
                 implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
                 implementation(libs.koin.android)
                 implementation(libs.androidx.security.crypto)
-                implementation(libs.firebase.crashlytics)
+
+                implementation(libs.bundles.android)
+                implementation(libs.bundles.android.ui)
             }
 
             kotlin.srcDirs(project.projectDir.resolve("build/src/androidMain/kotlin"))
@@ -130,4 +128,11 @@ android {
     }
 
     namespace = "com.paoapps.fifi.framework"
+
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.7"
+    }
 }

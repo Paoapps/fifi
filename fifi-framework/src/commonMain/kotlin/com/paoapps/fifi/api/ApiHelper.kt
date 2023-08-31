@@ -55,7 +55,7 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
     val tokensFlow: MutableStateFlow<Tokens?>,
     val environment: ModelEnvironment,
     private val appVersion: String,
-    private val apiKey: String
+    private val additionalHeaders: Map<String, String> = emptyMap(),
 ):
     KoinComponent {
 
@@ -203,17 +203,16 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
     }
 
     private fun headers(authHeader: String? = null): Map<String, String> {
-        val mutableMap = mutableMapOf<String, String>()
+        val mutableMap = additionalHeaders.toMutableMap()
         authHeader?.let { mutableMap["Authorization"] = it }
         languageProvider.language?.acceptLanguageHeader?.let {
             mutableMap["Accept-Language"] = it
         }
         mutableMap["User-Agent"] = getUserAgentHeader(appVersion)
-        mutableMap["X-Api-Key"] = apiKey
         return mutableMap
     }
 
-    fun createHeaders(httpRequestBuilder: HttpRequestBuilder, authHeader: String?) {
+    fun createHeaders(httpRequestBuilder: HttpRequestBuilder, authHeader: String? = null) {
         httpRequestBuilder.headers {
             headers(authHeader).entries.forEach {
                 httpRequestBuilder.header(it.key, it.value)
@@ -230,13 +229,12 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
     }
 }
 
-expect fun recordException(throwable: Throwable)
-
 suspend fun <T, ServerError> withinTryCatch(noConnectionError: String, unknownError: String, serverErrorParser: ServerErrorParser<ServerError>, block: suspend () -> ApiResponse<T, ServerError>): ApiResponse<T, ServerError> {
     try {
         return block()
     } catch (exception: Throwable) {
-        recordException(exception)
+        // TODO: allow for custom error handling/recording
+//        recordException(exception)
         com.paoapps.fifi.log.error("Request failed, $exception", exception)
         return when {
             exception.message?.contains("Code=-1009") == true -> { //Is Network down, code..

@@ -22,23 +22,23 @@ import org.koin.core.component.KoinComponent
 abstract class AbstractEvent(val animate: Boolean = false)
 object VoidEvent : AbstractEvent()
 
-abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewModel(), KoinComponent {
-    val actionHandler = ActionHandler(viewModelScope, ::_handleEvent)
+abstract class AbstractViewModel<Output, Event: AbstractEvent, Action, GlobalAction>(): ViewModel(), KoinComponent {
+    val actionHandler = ActionHandler<Action, Event, GlobalAction>(viewModelScope, ::_handleEvent)
 
     private val flowRefreshTrigger: MutableStateFlow<FlowRefreshTrigger> = MutableStateFlow(
         FlowRefreshTrigger.FromCache()
     )
 
-    open suspend fun _handleEvent(event: Event, input: Any?): ActionHandler.EventResult<Action, Event>? {
+    open suspend fun _handleEvent(event: Event, input: Any?): ActionHandler.EventResult<Action, Event, GlobalAction>? {
         animateFlow.value = event.animate
         return handleEvent(event, input)
     }
 
-    open suspend fun handleEvent(event: Event, input: Any?): ActionHandler.EventResult<Action, Event>? {
+    open suspend fun handleEvent(event: Event, input: Any?): ActionHandler.EventResult<Action, Event, GlobalAction>? {
         return handleEvent(event)
     }
 
-    open suspend fun handleEvent(event: Event): ActionHandler.EventResult<Action, Event>? {
+    open suspend fun handleEvent(event: Event): ActionHandler.EventResult<Action, Event, GlobalAction>? {
         warn("Unhandled event: $event")
         return null
     }
