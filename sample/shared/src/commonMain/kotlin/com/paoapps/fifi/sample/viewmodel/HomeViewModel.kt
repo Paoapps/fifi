@@ -4,7 +4,7 @@ import com.paoapps.fifi.domain.network.LoadingState
 import com.paoapps.fifi.viewmodel.AbstractEvent
 import com.paoapps.fifi.viewmodel.AbstractViewModel
 
-abstract class HomeViewModel: AbstractViewModel<HomeViewModel.Output, HomeViewModel.Event, HomeViewModel.Action, Unit>() {
+abstract class HomeViewModel: AbstractViewModel<HomeViewModel.Output, HomeViewModel.Event, HomeViewModel.Action>() {
 
     data class Output(
         val title: String,

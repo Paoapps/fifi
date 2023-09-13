@@ -13,12 +13,12 @@ interface Emitter<A, E> {
     fun action(action: A)
 }
 
-data class ActionHandler<A, E, GlobalAction>(val scope: CoroutineScope, private val handler: suspend (E, Any?) -> EventResult<A, E, GlobalAction>?) {
+data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: suspend (E, Any?) -> EventResult<A, E>?) {
 
     val notificationsFlow = MutableSharedFlow<ToastDefinition.Properties>()
     val notifications = notificationsFlow.asSharedFlow().wrap(scope)
 
-    val globalActionsFlow = MutableSharedFlow<GlobalAction>()
+    val globalActionsFlow = MutableSharedFlow<Any>()
     val globalActions = globalActionsFlow.asSharedFlow().wrap(scope)
 
     val actionsFlow = MutableSharedFlow<A>()
@@ -32,13 +32,13 @@ data class ActionHandler<A, E, GlobalAction>(val scope: CoroutineScope, private 
     private val _confirmationDialogs = MutableSharedFlow<ConfirmationDialogDefinition.Properties<E>>()
     val confirmationDialogs = _confirmationDialogs.asSharedFlow().wrap(scope)
 
-    sealed interface EventResult<A, E, GlobalAction> {
-        data class Event<A, E, GlobalAction>(val event: E): EventResult<A, E, GlobalAction>
-        data class Action<A, E, GlobalAction>(val action: A): EventResult<A, E, GlobalAction>
-//        data class Link<A, E>(val link: String): EventResult<A, E, GlobalAction>
-        data class ConfirmationDialog<A, E, GlobalAction>(val confirmationDialog: ConfirmationDialogDefinition.Properties<E>): EventResult<A, E, GlobalAction>
-        data class Toast<A, E, GlobalAction>(val properties: ToastDefinition.Properties): EventResult<A, E, GlobalAction>
-        data class Global<A, E, GlobalAction>(val action: GlobalAction): EventResult<A, E, GlobalAction>
+    sealed interface EventResult<A, E> {
+        data class Event<A, E>(val event: E): EventResult<A, E>
+        data class Action<A, E>(val action: A): EventResult<A, E>
+//        data class Link<A, E>(val link: String): EventResult<A, E>
+        data class ConfirmationDialog<A, E>(val confirmationDialog: ConfirmationDialogDefinition.Properties<E>): EventResult<A, E>
+        data class Toast<A, E>(val properties: ToastDefinition.Properties): EventResult<A, E>
+        data class Global<A, E>(val action: Any): EventResult<A, E>
     }
 
     init {

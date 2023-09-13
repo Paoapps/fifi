@@ -41,7 +41,7 @@ class HomeViewModelImpl: HomeViewModel() {
 
     override val output = _output.viewModelOutput(viewModelScope)
 
-    override suspend fun handleEvent(event: Event): ActionHandler.EventResult<Action, Event, Unit>? {
+    override suspend fun handleEvent(event: Event): ActionHandler.EventResult<Action, Event>? {
         return when(event) {
             Event.Next -> {
                 val coffee = _coffee.first().actualOrStaleData

@@ -20,8 +20,8 @@ val LocalLoading = compositionLocalOf { false }
 // TODO: ideally, this should also come with the framework
 
 @Composable
-fun <Output, Event : AbstractEvent, Action, GlobalAction> ViewModelComposable(
-    viewModel: AbstractViewModel<Output, Event, Action, GlobalAction>,
+fun <Output, Event : AbstractEvent, Action> ViewModelComposable(
+    viewModel: AbstractViewModel<Output, Event, Action>,
     onAction: (Action) -> Unit = {},
     content: @Composable (Output) -> Unit
 ) {
@@ -38,8 +38,8 @@ fun <Output, Event : AbstractEvent, Action, GlobalAction> ViewModelComposable(
 }
 
 @Composable
-private fun <Output, Event : AbstractEvent, Action, GlobalAction> ViewModelLayout(
-    viewModel: AbstractViewModel<Output, Event, Action, GlobalAction>,
+private fun <Output, Event : AbstractEvent, Action> ViewModelLayout(
+    viewModel: AbstractViewModel<Output, Event, Action>,
     onAction: (Action) -> Unit = {},
     content: @Composable (Output) -> Unit
 ) {
