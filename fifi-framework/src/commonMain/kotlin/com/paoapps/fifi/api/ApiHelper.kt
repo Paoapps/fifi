@@ -56,6 +56,13 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
     val environment: ModelEnvironment,
     private val appVersion: String,
     private val additionalHeaders: Map<String, String> = emptyMap(),
+    private val client: HttpClient = HttpClient {
+        expectSuccess = true
+        install(Logging) {
+            logger = Logger.SIMPLE
+            level = LogLevel.ALL
+        }
+    }
 ):
     KoinComponent {
 
@@ -70,14 +77,6 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
         parametersOf(environment)
     }
     private val languageProvider: LanguageProvider by inject()
-
-    val client = HttpClient {
-        expectSuccess = true
-        install(Logging) {
-            logger = Logger.SIMPLE
-            level = LogLevel.ALL
-        }
-    }
 
     suspend fun <T> authenticated(debug: String? = null, optional: Boolean = false, block: suspend (String?, IdentifiableClaims?) -> ApiResponse<T, ServerError>): ApiResponse<T, ServerError> = authenticated(debug, 0, optional, requireLock = true, block)
 
