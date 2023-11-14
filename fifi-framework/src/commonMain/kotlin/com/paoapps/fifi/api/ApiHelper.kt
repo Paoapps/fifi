@@ -56,7 +56,7 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
     val environment: ModelEnvironment,
     private val appVersion: String,
     private val additionalHeaders: Map<String, String> = emptyMap(),
-    private val client: HttpClient = HttpClient {
+    val client: HttpClient = HttpClient {
         expectSuccess = true
         install(Logging) {
             logger = Logger.SIMPLE
