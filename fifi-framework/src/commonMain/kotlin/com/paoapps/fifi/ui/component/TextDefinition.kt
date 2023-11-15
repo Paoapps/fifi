@@ -15,6 +15,7 @@ object TextDefinition {
         val lineHeight: Int = (size.toFloat() * 1.3).toInt(),
         val letterSpacing: Double = 0.0,
         val style: Style = Style.REGULAR,
+        val textStyle: TextStyle = TextStyle.BODY
     ) {
         enum class Weight {
             REGULAR,
@@ -26,6 +27,20 @@ object TextDefinition {
         enum class Style {
             REGULAR,
             ITALIC
+        }
+
+        enum class TextStyle {
+            LARGE_TITLE,
+            TITLE_1,
+            TITLE_2,
+            TITLE_3,
+            HEADLINE,
+            SUBHEADLINE,
+            BODY,
+            CALLOUT,
+            FOOTNOTE,
+            CAPTION_1,
+            CAPTION_2
         }
     }
 }
