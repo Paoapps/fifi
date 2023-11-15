@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.3"
+version = "0.0.4"
 
 kotlin {
     android {
