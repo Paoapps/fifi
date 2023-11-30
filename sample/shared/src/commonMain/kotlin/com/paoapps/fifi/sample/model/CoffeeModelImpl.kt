@@ -1,7 +1,7 @@
 package com.paoapps.fifi.sample.model
 
+import com.paoapps.blockedcache.BlockedCache
 import com.paoapps.fifi.auth.IdentifiableClaims
-import com.paoapps.fifi.domain.cache.BlockedCache
 import com.paoapps.fifi.model.ModelHelper
 import com.paoapps.fifi.model.createBlockCache
 import com.paoapps.fifi.sample.api.Api
@@ -11,10 +11,10 @@ import com.paoapps.fifi.utils.flow.Fetch
 import kotlin.time.Duration.Companion.minutes
 
 class CoffeeModelImpl(
-    private val modelHelper: ModelHelper<ModelData, IdentifiableClaims, Api, Unit>,
+    private val modelHelper: ModelHelper<ModelData, IdentifiableClaims, Api>,
     model: AppModel
 ): CoffeeModel {
-    private val hotCoffeeCache: BlockedCache<List<Coffee>, Unit> = createBlockCache(model, 5.minutes, null, ModelData::hotCoffee, "hotCoffee", isDebugEnabled = true)
+    private val hotCoffeeCache: BlockedCache<List<Coffee>> = createBlockCache(model, 5.minutes, null, ModelData::hotCoffee, "hotCoffee", isDebugEnabled = true)
 
     override fun coffee(fetch: Fetch) =
         modelHelper.withApiBlockedCacheFlow(

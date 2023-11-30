@@ -1,7 +1,7 @@
 package com.paoapps.fifi.auth
 
-import com.paoapps.fifi.api.domain.ApiResponse
+import com.paoapps.blockedcache.FetcherResult
 
-interface AuthApi<ServerError> {
-    suspend fun refresh(refreshToken: String): ApiResponse<Tokens, ServerError>
+interface AuthApi {
+    suspend fun refresh(refreshToken: String): FetcherResult<Tokens>
 }

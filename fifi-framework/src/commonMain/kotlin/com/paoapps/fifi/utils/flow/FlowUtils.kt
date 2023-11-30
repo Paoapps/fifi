@@ -1,14 +1,12 @@
 package com.paoapps.fifi.utils.flow
 
-import com.paoapps.fifi.coroutines.AppMainScope
-import com.paoapps.fifi.domain.network.NetworkDataContainer
-import io.ktor.utils.io.core.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 fun <T> Flow<T>.wrap(scope: CoroutineScope): FlowAdapter<T> =
     FlowAdapter(scope, this)
@@ -39,7 +37,7 @@ fun <T> Flow<T>.internalDebug(message: String, describeValue: (T) -> (String) = 
 private data class Poll(val delayTime: Duration, val initial: Boolean = false)
 
 // TODO: implement when needed
-//fun <T: NetworkDataContainer<D>, D> Flow<T>.poll(
+//fun <T: CacheResult<D>, D> Flow<T>.poll(
 //    delayDuration: Duration = 1.minutes,
 //    errorDelayDuration: Duration = 5.seconds,
 //    delayFactor: Int = 2

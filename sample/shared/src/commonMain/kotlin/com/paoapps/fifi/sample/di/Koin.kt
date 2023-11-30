@@ -22,14 +22,14 @@ fun initKoinApp(
     sharedAppModule: Module,
     model: () -> AppModel,
     appDeclaration: KoinAppDeclaration = {}
-) = initKoinSharedWithoutAuthentication<ModelData, AppModelEnvironment, Unit, Api>(
+) = initKoinSharedWithoutAuthentication<ModelData, Unit, AppModelEnvironment, Api>(
     "com.paoapps.fifi.sample",
     sharedAppModule,
     model
 ) {
     appDeclaration()
     modules(module {
-        single { get<Model<ModelData, IdentifiableClaims, AppModelEnvironment, Int, Api>>() as AppModel }
+        single { get<Model<ModelData, Unit, IdentifiableClaims, AppModelEnvironment, Int, Api>>() as AppModel }
 
         single<CoffeeModel> { CoffeeModelImpl(get(), get()) }
     }, sharedAppModule)

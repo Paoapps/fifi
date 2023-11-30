@@ -1,5 +1,7 @@
 package com.paoapps.fifi.api
 
+import com.paoapps.blockedcache.FetcherResult
+import com.paoapps.blockedcache.map
 import com.paoapps.fifi.api.domain.*
 import com.paoapps.fifi.auth.*
 import com.paoapps.fifi.localization.CommonStringsProvider
@@ -46,12 +48,13 @@ interface TokenDecoder<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims
     fun encodeRefreshTokenClaims(claims: RefreshTokenClaims): String
 }
 
-interface ServerErrorParser<E> {
-    suspend fun parseError(response: HttpResponse): E?
-    suspend fun <T> toClientFailure(response: HttpResponse, error: E?, exception: Exception): Failure<T, E>
-}
+// TODO: do we still need this?
+//interface ServerErrorParser<E> {
+//    suspend fun parseError(response: HttpResponse): E?
+//    suspend fun <T> toClientFailure(response: HttpResponse, error: E?, exception: Exception): FetcherResult.Error
+//}
 
-open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims, ServerError : Any>(
+open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims>(
     val tokensFlow: MutableStateFlow<Tokens?>,
     val environment: ModelEnvironment,
     private val appVersion: String,
@@ -70,17 +73,15 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
 
     val tokenDecoder: TokenDecoder<AccessTokenClaims, RefreshTokenClaims> by inject()
     val tokenStore: TokenStore by inject()
-    private val stringsProvider: CommonStringsProvider by inject()
-    private val serverErrorParser: ServerErrorParser<ServerError> by inject()
 
-    private val authApi: AuthApi<ServerError> by inject {
+    private val authApi: AuthApi by inject {
         parametersOf(environment)
     }
     private val languageProvider: LanguageProvider by inject()
 
-    suspend fun <T> authenticated(debug: String? = null, optional: Boolean = false, block: suspend (String?, IdentifiableClaims?) -> ApiResponse<T, ServerError>): ApiResponse<T, ServerError> = authenticated(debug, 0, optional, requireLock = true, block)
+    suspend fun <T: Any> authenticated(debug: String? = null, optional: Boolean = false, block: suspend (String?, IdentifiableClaims?) -> FetcherResult<T>): FetcherResult<T> = authenticated(debug, 0, optional, requireLock = true, block)
 
-    suspend fun <T> authenticated(debug: String? = null, recursiveCount: Int, optional: Boolean = false, requireLock: Boolean, block: suspend (String?, IdentifiableClaims?) -> ApiResponse<T, ServerError>): ApiResponse<T, ServerError> {
+    suspend fun <T: Any> authenticated(debug: String? = null, recursiveCount: Int, optional: Boolean = false, requireLock: Boolean, block: suspend (String?, IdentifiableClaims?) -> FetcherResult<T>): FetcherResult<T> {
         val debugPrefix = "($recursiveCount)" + (debug?.let { "$it: " } ?: "")
         debug("${debugPrefix}Start authenticated call")
         val tokens = tokensFlow.value
@@ -117,7 +118,7 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
                         warn("${debugPrefix}Don't have refreshToken. Unable to refresh.")
                         tokenStore.deleteTokens(environment)
                         tokensFlow.value = null
-                        return Failure.create(HttpStatusCode.NotFound)
+                        return FetcherResult.Error.Message(HttpStatusCode.NotFound.description)
                     }
 
                     debug("${debugPrefix}Refresh tokens not expired, attempt to refresh tokens")
@@ -128,7 +129,7 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
                     }
                     debug("${debugPrefix}Lock unlocked")
 
-                    if (refreshResponse is Failure) {
+                    if (refreshResponse is FetcherResult.Error) {
                         debug("${debugPrefix}Refresh tokens failed")
                         return refreshResponse.map()
                     }
@@ -174,15 +175,15 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
     private suspend fun refreshTokens(refreshToken: String) = withinTryCatch {
         val response = authApi.refresh(refreshToken)
         when(response) {
-            is Success -> {
-                var tokens = response.data
+            is FetcherResult.Data -> {
+                var tokens = response.value
                 if (tokens.refreshToken == null) {
                     debug("Refresh token is null, use old refresh token: $refreshToken")
                     tokens = tokens.copy(refreshToken = refreshToken)
                 }
                 saveTokens(tokens)
             }
-            is Failure -> {
+            is FetcherResult.Error -> {
                 if (isPermanentError(response)) {
                     deleteTokens()
                 }
@@ -219,54 +220,61 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
         }
     }
 
-    suspend fun <T> withinTryCatch(block: suspend () -> ApiResponse<T, ServerError>) =
-        withinTryCatch(stringsProvider.errorNoConnection, stringsProvider.errorUnknown, serverErrorParser, block)
-
     companion object {
-        private fun isPermanentError(response: Failure<Any, Any>) =
-            response.status == HttpStatusCode.Unauthorized.value
-    }
-}
-
-suspend fun <T, ServerError> withinTryCatch(noConnectionError: String, unknownError: String, serverErrorParser: ServerErrorParser<ServerError>, block: suspend () -> ApiResponse<T, ServerError>): ApiResponse<T, ServerError> {
-    try {
-        return block()
-    } catch (exception: Throwable) {
-        // TODO: allow for custom error handling/recording
-//        recordException(exception)
-        com.paoapps.fifi.log.error("Request failed, $exception", exception)
-        return when {
-            exception.message?.contains("Code=-1009") == true -> { //Is Network down, code..
-                Failure(-1009, noConnectionError, FailureKind.NETWORK, exception)
-            }
-            exception.message?.contains("Code=-1004") == true -> { //Is Network down, code..
-                Failure(-1004, noConnectionError, FailureKind.NETWORK, exception)
-            }
-            exception is ClientRequestException -> {
-
-                val response = exception.response
-                // TODO: do we need this?
-                var serverError: ServerError? = null
-                try {
-                    serverError = serverErrorParser.parseError(response)
-//                    serverError = jsonParser.decodeFromString(
-//                        ServerError.serializer(),
-//                        response.readText(Charset.forName("UTF-8"))
-//                    )
-                } catch (_: Exception) {
-
-                }
-                serverErrorParser.toClientFailure(response, serverError, exception)
-            }
-            else -> {
-                Failure(500, exception.message ?: unknownError, FailureKind.SERVER, exception) //Unknown failure
-            }
+        private fun isPermanentError(response: FetcherResult.Error) = when(response) {
+            is FetcherResult.Error.Exception -> (response.error as? ClientRequestException)?.response?.status == HttpStatusCode.Unauthorized
+            is FetcherResult.Error.Message -> false
         }
     }
 }
 
-suspend fun <T, E> HttpResponse.decodeFromString(deserializer: DeserializationStrategy<T>): Success<T, E> =
-    Success(status.value,
+suspend fun <T: Any> withinTryCatch(block: suspend () -> FetcherResult<T>): FetcherResult<T> {
+    return try {
+        block()
+    } catch (exception: Throwable) {
+        FetcherResult.Error.Exception(exception)
+    }
+}
+
+//suspend fun <T: Any> withinTryCatch(noConnectionError: String, unknownError: String, serverErrorParser: ServerErrorParser, block: suspend () -> FetcherResult<T>): FetcherResult<T> {
+//    try {
+//        return block()
+//    } catch (exception: Throwable) {
+//        // TODO: allow for custom error handling/recording
+////        recordException(exception)
+//        com.paoapps.fifi.log.error("Request failed, $exception", exception)
+//        return when {
+//            exception.message?.contains("Code=-1009") == true -> { //Is Network down, code..
+//                Failure(-1009, noConnectionError, FailureKind.NETWORK, exception)
+//            }
+//            exception.message?.contains("Code=-1004") == true -> { //Is Network down, code..
+//                Failure(-1004, noConnectionError, FailureKind.NETWORK, exception)
+//            }
+//            exception is ClientRequestException -> {
+//
+//                val response = exception.response
+//                // TODO: do we need this?
+//                var serverError: ServerError? = null
+//                try {
+//                    serverError = serverErrorParser.parseError(response)
+////                    serverError = jsonParser.decodeFromString(
+////                        ServerError.serializer(),
+////                        response.readText(Charset.forName("UTF-8"))
+////                    )
+//                } catch (_: Exception) {
+//
+//                }
+//                serverErrorParser.toClientFailure(response, serverError, exception)
+//            }
+//            else -> {
+//                Failure(500, exception.message ?: unknownError, FailureKind.SERVER, exception) //Unknown failure
+//            }
+//        }
+//    }
+//}
+
+suspend fun <T: Any> HttpResponse.decodeFromString(deserializer: DeserializationStrategy<T>): FetcherResult.Data<T> =
+    FetcherResult.Data(
         jsonParser.decodeFromString(
             deserializer,
             bodyAsText()
@@ -274,4 +282,4 @@ suspend fun <T, E> HttpResponse.decodeFromString(deserializer: DeserializationSt
     )
 
 
-fun <E> HttpResponse.noData() = Success.noData<E>(status)
+fun HttpResponse.noData() = FetcherResult.Data(Unit)

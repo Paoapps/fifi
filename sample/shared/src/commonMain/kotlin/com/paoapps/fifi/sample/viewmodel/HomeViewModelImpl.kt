@@ -1,5 +1,6 @@
 package com.paoapps.fifi.sample.viewmodel
 
+import com.paoapps.blockedcache.CacheResult
 import com.paoapps.fifi.sample.model.CoffeeModel
 import com.paoapps.fifi.utils.ActionHandler
 import com.paoapps.fifi.viewmodel.viewModelOutput
@@ -28,7 +29,7 @@ class HomeViewModelImpl: HomeViewModel() {
                 Output.Button("Previous", Event.Previous),
                 Output.Button("Next", Event.Next),
             ),
-            loadingState = coffeeContainer.loadingState,
+            isLoading = coffeeContainer is CacheResult.Loading,
             item = coffeeContainer.actualOrStaleData?.getOrNull(state.index)?.let { coffee ->
                 Output.Item(
                     title = coffee.title,

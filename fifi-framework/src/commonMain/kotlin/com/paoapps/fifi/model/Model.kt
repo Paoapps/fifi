@@ -7,9 +7,10 @@ import com.paoapps.fifi.model.datacontainer.CDataContainer
 import com.paoapps.fifi.utils.flow.FlowAdapter
 import kotlinx.coroutines.flow.Flow
 
-interface Model<ModelData, AccessTokenClaims: IdentifiableClaims, Environment: ModelEnvironment, UserId, Api: ClientApi<AccessTokenClaims>> {
+interface Model<ModelData, MockConfig, AccessTokenClaims: IdentifiableClaims, Environment: ModelEnvironment, UserId, Api: ClientApi<AccessTokenClaims>> {
     val userIdFlow: Flow<UserId?>
     val modelData: CDataContainer<ModelData>
+    val mockConfigData: CDataContainer<MockConfig>
     val apiFlow: Flow<Api>
 
     val environmentFlow: FlowAdapter<Environment>

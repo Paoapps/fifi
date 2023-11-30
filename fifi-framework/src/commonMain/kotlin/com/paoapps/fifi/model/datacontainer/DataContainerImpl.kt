@@ -4,7 +4,7 @@ import com.paoapps.fifi.api.jsonParser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.KSerializer
 
-class DataContainerImpl<T>(val serializer: KSerializer<T>, val dataPreProcessors: List<DataProcessor<T>>): DataContainer<T> {
+class DataContainerImpl<T>(val serializer: KSerializer<T>, val dataPreProcessors: List<DataProcessor<T>> = emptyList()): DataContainer<T> {
 
     private val _dataFlow = MutableStateFlow<T?>(null)
     override val dataFlow = _dataFlow

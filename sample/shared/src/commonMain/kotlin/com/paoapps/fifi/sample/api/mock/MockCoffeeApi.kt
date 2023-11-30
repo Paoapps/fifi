@@ -1,13 +1,12 @@
 package com.paoapps.fifi.sample.api.mock
 
-import com.paoapps.fifi.api.domain.ApiResponse
-import com.paoapps.fifi.api.domain.Success
+import com.paoapps.blockedcache.FetcherResult
 import com.paoapps.fifi.sample.api.CoffeeApi
 import com.paoapps.fifi.sample.domain.Coffee
 
 class MockCoffeeApi: CoffeeApi {
-    override suspend fun hotCoffee(): ApiResponse<List<Coffee>, Unit> {
-        return Success.ok(listOf(
+    override suspend fun hotCoffee(): FetcherResult<List<Coffee>> {
+        return FetcherResult.Data(listOf(
             Coffee(
                 id = 1,
                 title = "Cappuccino",

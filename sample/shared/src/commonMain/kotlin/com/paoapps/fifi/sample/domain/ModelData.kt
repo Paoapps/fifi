@@ -1,7 +1,7 @@
 package com.paoapps.fifi.sample.domain
 
+import com.paoapps.blockedcache.BlockedCacheData
 import com.paoapps.fifi.domain.LaunchData
-import com.paoapps.fifi.domain.cache.BlockedCacheData
 import kotlinx.serialization.Serializable
 
 @Serializable

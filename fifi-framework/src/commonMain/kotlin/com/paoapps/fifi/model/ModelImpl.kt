@@ -17,12 +17,14 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import org.koin.core.component.KoinComponent
 
-abstract class ModelImpl<ModelData, AccessTokenClaims: IdentifiableClaims, Environment: ModelEnvironment, Api: ClientApi<AccessTokenClaims>, UserId, ServerError>(
+abstract class ModelImpl<ModelData, MockConfig, AccessTokenClaims: IdentifiableClaims, Environment: ModelEnvironment, Api: ClientApi<AccessTokenClaims>, UserId>(
     scope: CoroutineScope,
     environment: Environment,
-): KoinComponent, Model<ModelData, AccessTokenClaims, Environment, UserId, Api> {
+): KoinComponent, Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api> {
 
     abstract val modelDataSerializer: KSerializer<ModelData>
+    abstract val mockConfigSerializer: KSerializer<MockConfig>
+
     open val dataPreProcessors: List<DataProcessor<ModelData>> = emptyList()
 
     private val environmentStateFlow = MutableStateFlow(environment)
@@ -35,6 +37,10 @@ abstract class ModelImpl<ModelData, AccessTokenClaims: IdentifiableClaims, Envir
         DataContainerImpl(modelDataSerializer, dataPreProcessors).wrap()
     }
 
+    override val mockConfigData: CDataContainer<MockConfig> by lazy {
+        DataContainerImpl(mockConfigSerializer).wrap()
+    }
+
     init {
         scope.launch {
             combine(environmentFlow, appVersionFlow) { environment, appVersion ->
@@ -45,8 +51,8 @@ abstract class ModelImpl<ModelData, AccessTokenClaims: IdentifiableClaims, Envir
 
     abstract fun createApi(environment: Environment, appVersion: String): Api
 
-    // TODO: remove. hint: ModelData(AppData(LaunchData(currentAppVersion = version)))
     abstract fun createModelData(launchData: LaunchData): ModelData
+    abstract fun createMockConfig(): MockConfig
     abstract fun getLaunchData(modelData: ModelData): LaunchData
     abstract fun copyLaunchData(modelData: ModelData, launchData: LaunchData): ModelData
 
@@ -55,7 +61,13 @@ abstract class ModelImpl<ModelData, AccessTokenClaims: IdentifiableClaims, Envir
     }
 
     override fun registerLaunch(version: String) {
-        debug("🔵 register launch of version ${version}")
+        debug("register launch of version ${version}")
+
+        val mock = mockConfigData
+        if (mock.data == null) {
+            mock.data = createMockConfig()
+        }
+
         val data = modelData.data
         if (data == null) {
             this.modelData.data = createModelData(LaunchData(currentAppVersion = version))

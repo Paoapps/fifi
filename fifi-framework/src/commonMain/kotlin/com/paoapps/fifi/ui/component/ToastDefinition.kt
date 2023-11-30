@@ -1,6 +1,5 @@
 package com.paoapps.fifi.ui.component
 
-import com.paoapps.fifi.ui.token.ToastToken
 import kotlinx.serialization.Serializable
 
 object ToastDefinition {
@@ -13,6 +12,6 @@ object ToastDefinition {
     data class Properties(
         val title: String? = null,
         val message: String? = null,
-        val token: ToastToken
+        val token: String? = null
     )
 }

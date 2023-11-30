@@ -1,14 +1,17 @@
 package com.paoapps.fifi.model
 
+import com.paoapps.blockedcache.BlockedCache
+import com.paoapps.blockedcache.BlockedCacheData
 import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.auth.IdentifiableClaims
-import com.paoapps.fifi.domain.cache.BlockedCache
-import com.paoapps.fifi.domain.cache.BlockedCacheData
-import com.paoapps.fifi.domain.network.NetworkStatusMonitor
 import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlin.random.Random
 import kotlin.time.Duration
 
@@ -20,33 +23,31 @@ fun appBecameActive() {
     AppBecameActive.value = Random.nextInt().toString()
 }
 
-fun <T : Any, ModelData, AccessTokenClaims: IdentifiableClaims, Environment: ModelEnvironment, UserId, ServerError, Api: ClientApi<AccessTokenClaims>> createBlockCache(
-    model: Model<ModelData, AccessTokenClaims, Environment, UserId, Api>,
+fun <T: Any, ModelData, MockConfig, AccessTokenClaims : IdentifiableClaims, Environment : ModelEnvironment, UserId, Api : ClientApi<AccessTokenClaims>> createBlockCache(
+    model: Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api>,
     duration: Duration,
     expire: Duration?,
     selector: (ModelData) -> BlockedCacheData<T>?,
     name: String,
     triggerOnUserIdChange: Boolean = true,
     isDebugEnabled: Boolean = false
-): BlockedCache<T, ServerError> {
+): BlockedCache<T> {
 
     val userIdChangedFlow = if (triggerOnUserIdChange) model.userIdFlow else flowOf(Unit)
 
     val dataFlow = model.modelData.dataFlow.map {
         if (isDebugEnabled) {
-            debug("createBlockCache($name): modelData: $it")
+            debug("createBlockCache($name)")
         }
         it?.let(selector) ?: BlockedCacheData<T>(null, null)
     }.distinctUntilChanged()
 
-    val blockedCache = BlockedCache<T, ServerError>(
+    return BlockedCache(
         duration.inWholeMilliseconds,
         expire?.inWholeMilliseconds,
         combine(AppBecameActiveFlow, userIdChangedFlow) { _, _ -> },
         dataFlow,
         name = name,
-        isDebugEnabled = isDebugEnabled,
-        networkStatusFlow = NetworkStatusMonitor.networkStatus
+        isDebugEnabled = isDebugEnabled
     )
-    return blockedCache
 }

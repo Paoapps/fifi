@@ -54,7 +54,7 @@ fun HomeView(
                 }
             }
 
-            if (output.loadingState.isLoading) {
+            if (output.isLoading) {
                 Text(text = "Loading...")
             }
 

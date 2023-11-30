@@ -89,6 +89,8 @@ abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewMo
         }.distinctUntilChanged()
     }
 
-    fun <R> createRefreshableFetchFlow(data: (refresh: Fetch) -> Flow<R>, default: Fetch = Fetch.CACHE): Flow<R> =
+    fun <R> createRefreshableFetchFlow(data: (refresh: Fetch) -> Flow<R>) = createRefreshableFetchFlow(default = Fetch.CACHE, data = data)
+
+    fun <R> createRefreshableFetchFlow(default: Fetch, data: (refresh: Fetch) -> Flow<R>): Flow<R> =
         createRefreshableFlow { data(if (it) Fetch.FORCE else default) }
 }

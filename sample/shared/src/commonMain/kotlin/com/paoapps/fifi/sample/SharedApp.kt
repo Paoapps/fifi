@@ -27,5 +27,7 @@ fun initApp(environment: AppModelEnvironment, isDebugMode: Boolean, appDeclarati
     return initKoinApp(
         SharedApp().appModule,
         { AppModelImpl(environment) },
-    )
+    ) {
+        appDeclaration()
+    }
 }

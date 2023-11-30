@@ -52,5 +52,5 @@ sealed class AppModelEnvironment(val environmentName: EnvironmentName, val confi
     }
 }
 
-interface AppModel: Model<ModelData, IdentifiableClaims, AppModelEnvironment, Unit, Api> {
+interface AppModel: Model<ModelData, Unit, IdentifiableClaims, AppModelEnvironment, Unit, Api> {
 }

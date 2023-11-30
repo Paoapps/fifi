@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.4"
+version = "0.0.5-SNAPSHOT"
 
 val ktorVersion = "2.1.3"
 val logbackVersion = "1.2.3"
@@ -62,6 +62,8 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
 
                 implementation(libs.multiplatform.settings)
+
+                implementation(libs.blockedcache)
             }
 
             kotlin.srcDirs(project.projectDir.resolve("build/src/commonMain/kotlin"))

@@ -6,4 +6,4 @@ import com.paoapps.fifi.utils.flow.FlowAdapter
 import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.MainScope
 
-val <ModelData, AccessTokenClaims: IdentifiableClaims, Environment: ModelEnvironment, UserId, Api: ClientApi<AccessTokenClaims>> Model<ModelData, AccessTokenClaims, Environment, UserId, Api>.dataFlow: FlowAdapter<ModelData?> get() = modelData.dataFlow.wrap(MainScope())
+val <ModelData, MockConfig, AccessTokenClaims: IdentifiableClaims, Environment: ModelEnvironment, UserId, Api: ClientApi<AccessTokenClaims>> Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api>.dataFlow: FlowAdapter<ModelData?> get() = modelData.dataFlow.wrap(MainScope())

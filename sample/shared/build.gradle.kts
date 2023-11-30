@@ -51,6 +51,8 @@ kotlin {
                 implementation(project(":fifi-common"))
                 api(project(":fifi-framework"))
 
+                implementation(libs.blockedcache)
+
                 implementation("io.insert-koin:koin-core:$koinVersion")
             }
 

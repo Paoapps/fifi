@@ -1,74 +1,77 @@
 package com.paoapps.fifi.model
 
+import com.paoapps.blockedcache.BlockedCache
+import com.paoapps.blockedcache.BlockedCacheData
+import com.paoapps.blockedcache.CacheResult
+import com.paoapps.blockedcache.FetcherResult
+import com.paoapps.blockedcache.asCacheResult
 import com.paoapps.fifi.api.ClientApi
-import com.paoapps.fifi.api.domain.ApiResponse
-import com.paoapps.fifi.api.domain.Failure
-import com.paoapps.fifi.api.domain.Success
 import com.paoapps.fifi.auth.IdentifiableClaims
-import com.paoapps.fifi.domain.cache.BlockedCache
-import com.paoapps.fifi.domain.cache.BlockedCacheData
-import com.paoapps.fifi.domain.network.NetworkDataContainer
-import com.paoapps.fifi.domain.network.asCommonDataContainer
 import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.model.datacontainer.DataContainer
 import com.paoapps.fifi.utils.flow.Fetch
-import com.paoapps.fifi.utils.flow.debug
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 
-class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientApi<AccessTokenClaims>, ServerError>(val apiFlow: Flow<Api>, val modelDataContainer: DataContainer<ModelData>) {
+class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientApi<AccessTokenClaims>>(val apiFlow: Flow<Api>, val modelDataContainer: DataContainer<ModelData>) {
 
     suspend fun api(): Api = apiFlow.first()
 
-    fun <R> createApiCallFlow(
-        data: suspend (api: ClientApi<AccessTokenClaims>) -> ApiResponse<R, ServerError>,
-    ): Flow<NetworkDataContainer<R, ServerError>> {
+    fun <R: Any> createApiCallFlow(
+        data: suspend (api: ClientApi<AccessTokenClaims>) -> FetcherResult<R>,
+    ): Flow<CacheResult<R>> {
         return apiFlow.flatMapLatest { api ->
-            flow<NetworkDataContainer<R, ServerError>> {
-                emit(NetworkDataContainer.Loading(null, 0L))
+            flow<CacheResult<R>> {
+                emit(CacheResult.Loading(null, 0L))
                 val apiResponse = data(api)
-                emit(apiResponse.asCommonDataContainer())
+                emit(apiResponse.asCacheResult())
             }
         }.distinctUntilChanged()
     }
 
-    fun <T> withApiBlockedCacheFlow(
+    fun <T: Any> withApiBlockedCacheFlow(
         debugName: String? = null,
-        blockedCache: BlockedCache<T, ServerError>,
+        blockedCache: BlockedCache<T>,
         fetch: Fetch,
-        apiCall: suspend (api: Api, modelData: ModelData) -> ApiResponse<T, ServerError>,
+        apiCall: suspend (api: Api, modelData: ModelData) -> FetcherResult<T>,
         predicate: (T, Instant) -> Boolean = { _, _ -> true },
         condition: Flow<Boolean> = flowOf(true),
         processData: (responseData: BlockedCacheData<T>, modelData: ModelData) -> ModelData
-    ): Flow<NetworkDataContainer<T, ServerError>> = apiFlow.flatMapLatest { api ->
+    ): Flow<CacheResult<T>> = apiFlow.flatMapLatest { api ->
         withBlockedCacheFlow(debugName, blockedCache, fetch, {
             apiCall(api, it)
         }, predicate, condition, processData)
     }
 
-    fun <T> withApiBlockedCacheFlow(
+    fun <T: Any> withApiBlockedCacheFlow(
         debugName: String? = null,
-        blockedCache: BlockedCache<T, ServerError>,
+        blockedCache: BlockedCache<T>,
         forceRefresh: Boolean,
-        apiCall: suspend (api: Api, modelData: ModelData) -> ApiResponse<T, ServerError>,
+        apiCall: suspend (api: Api, modelData: ModelData) -> FetcherResult<T>,
         predicate: (T, Instant) -> Boolean = { _, _ -> true },
         condition: Flow<Boolean> = flowOf(true),
         processData: (responseData: BlockedCacheData<T>, modelData: ModelData) -> ModelData
-    ): Flow<NetworkDataContainer<T, ServerError>> = apiFlow.flatMapLatest { api ->
+    ): Flow<CacheResult<T>> = apiFlow.flatMapLatest { api ->
         withBlockedCacheFlow(debugName, blockedCache, forceRefresh, {
             apiCall(api, it)
         }, predicate, condition, processData)
     }
 
-    fun <T> withBlockedCacheFlow(
+    fun <T: Any> withBlockedCacheFlow(
         debugName: String? = null,
-        blockedCache: BlockedCache<T, ServerError>,
+        blockedCache: BlockedCache<T>,
         fetch: Fetch,
-        apiCall: suspend (modelData: ModelData) -> ApiResponse<T, ServerError>,
+        apiCall: suspend (modelData: ModelData) -> FetcherResult<T>,
         predicate: (T, Instant) -> Boolean = { _, _ -> true },
         condition: Flow<Boolean> = flowOf(true),
         processData: (responseData: BlockedCacheData<T>, modelData: ModelData) -> ModelData
-    ): Flow<NetworkDataContainer<T, ServerError>> =
+    ): Flow<CacheResult<T>> =
         withBlockedCacheFlow(
             debugName,
             blockedCache = blockedCache,
@@ -79,22 +82,21 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
             processData = processData
         )
 
-    fun <T> withBlockedCacheFlow(
+    fun <T: Any> withBlockedCacheFlow(
         debugName: String? = null,
-        blockedCache: BlockedCache<T, ServerError>,
+        blockedCache: BlockedCache<T>,
         forceRefresh: Boolean,
-        apiCall: suspend (modelData: ModelData) -> ApiResponse<T, ServerError>,
+        apiCall: suspend (modelData: ModelData) -> FetcherResult<T>,
         predicate: (T, Instant) -> Boolean = { _, _ -> true },
         condition: Flow<Boolean> = flowOf(true),
         processData: (responseData: BlockedCacheData<T>, modelData: ModelData) -> ModelData
-    ): Flow<NetworkDataContainer<T, ServerError>> =
+    ): Flow<CacheResult<T>> =
         withModelDataFlow(
             debugName = debugName,
             apiCall = { modelData, updateData ->
                 debugName?.let { debug("🔵 api call of $it") }
                 blockedCache.getData(
                     forceRefresh = forceRefresh,
-                    environment = api().environment,
                     predicate = predicate,
                     condition = condition,
                     fetcher = { apiCall(modelData) },
@@ -105,11 +107,11 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
         )
 
 
-    fun <T, D> withModelDataFlow(
+    fun <T: Any, D> withModelDataFlow(
         debugName: String? = null,
-        apiCall: suspend (modelData: ModelData, processSuccessData: (D) -> Unit) -> Flow<NetworkDataContainer<T, ServerError>>,
+        apiCall: suspend (modelData: ModelData, processSuccessData: (D) -> Unit) -> Flow<CacheResult<T>>,
         processData: (responseData: D, modelData: ModelData) -> ModelData
-    ): Flow<NetworkDataContainer<T, ServerError>> {
+    ): Flow<CacheResult<T>> {
         return flow {
             val r = withDataFlow<T, D>(
                 { data, processSuccess ->
@@ -132,9 +134,9 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
     }
 
     private suspend fun <T, D> withDataFlow(
-        apiCall: suspend (data: ModelData, processSuccessData: (D) -> Unit) -> Flow<NetworkDataContainer<T, ServerError>>,
+        apiCall: suspend (data: ModelData, processSuccessData: (D) -> Unit) -> Flow<CacheResult<T>>,
         processData: ((responseData: D, data: ModelData) -> ModelData?)? = null
-    ): Flow<NetworkDataContainer<T, ServerError>> {
+    ): Flow<CacheResult<T>> {
         return flow {
             modelDataContainer.data?.let { modelData ->
                 val response = apiCall(modelData) { successData ->
@@ -155,11 +157,11 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
         }
     }
 
-    suspend fun <T> withData(apiCall: suspend (modelData: ModelData) -> ApiResponse<T, ServerError>, processData: ((responseData: T, modelData: ModelData) -> ModelData)? = null): ApiResponse<T, ServerError> {
-        val modelData = modelDataContainer.data ?: return Failure(0, "No Data")
+    suspend fun <T: Any> withData(apiCall: suspend (modelData: ModelData) -> FetcherResult<T>, processData: ((responseData: T, modelData: ModelData) -> ModelData)? = null): FetcherResult<T> {
+        val modelData = modelDataContainer.data ?: return FetcherResult.Error.Message("No Data")
         val response = apiCall(modelData)
-        if (response is Success && processData != null) {
-            val successData = response.data
+        if (response is FetcherResult.Data && processData != null) {
+            val successData = response.value
             modelDataContainer.data?.let {
                 val processedData = processData(successData, it)
                 modelDataContainer.data = processedData

@@ -1,21 +1,21 @@
 package com.paoapps.fifi.di
 
+import com.paoapps.blockedcache.FetcherResult
 import com.paoapps.fifi.api.ClientApi
-import com.paoapps.fifi.api.ServerErrorParser
 import com.paoapps.fifi.api.TokenDecoder
-import com.paoapps.fifi.api.domain.ApiResponse
-import com.paoapps.fifi.api.domain.Failure
-import com.paoapps.fifi.api.domain.FailureKind
-import com.paoapps.fifi.auth.*
+import com.paoapps.fifi.auth.AuthApi
+import com.paoapps.fifi.auth.Claims
+import com.paoapps.fifi.auth.IdentifiableClaims
+import com.paoapps.fifi.auth.SettingsTokenStore
+import com.paoapps.fifi.auth.TokenStore
+import com.paoapps.fifi.auth.Tokens
 import com.paoapps.fifi.localization.CommonStringsProvider
 import com.paoapps.fifi.localization.DefaultLanguageProvider
 import com.paoapps.fifi.localization.LanguageProvider
-import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.model.Model
 import com.paoapps.fifi.model.ModelEnvironment
 import com.paoapps.fifi.model.ModelHelper
 import io.ktor.client.statement.HttpResponse
-import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -30,7 +30,7 @@ enum class PlatformModuleQualifier {
     SETTINGS
 }
 
-private fun <ModelData, Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaims, Api: ClientApi<AccessTokenClaims>> initKoin(serviceName: String, sharedAppModule: Module, model: () -> Model<ModelData, AccessTokenClaims, Environment, UserId, Api>, appDeclaration: KoinAppDeclaration = {}, additionalInjections: (Module) -> (Unit)) = startKoin {
+private fun <ModelData, MockConfig, Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaims, Api: ClientApi<AccessTokenClaims>> initKoin(serviceName: String, sharedAppModule: Module, model: () -> Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api>, appDeclaration: KoinAppDeclaration = {}, additionalInjections: (Module) -> (Unit)) = startKoin {
     appDeclaration()
     modules(
         sharedModule(model, additionalInjections),
@@ -39,9 +39,9 @@ private fun <ModelData, Environment: ModelEnvironment, UserId, AccessTokenClaims
     )
 }
 
-data class Authentication<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims, ServerError>(
+data class Authentication<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims>(
     val tokenDecoder: TokenDecoder<AccessTokenClaims, RefreshTokenClaims>,
-    val authApi: (scope: Scope) -> AuthApi<ServerError>
+    val authApi: (scope: Scope) -> AuthApi
 )
 
 /**
@@ -55,10 +55,10 @@ data class Authentication<AccessTokenClaims: IdentifiableClaims, RefreshTokenCla
  * @param serverErrorParser The server error parser that is used to parse server errors. In case your api returns server errors, you can use this to parse them and return a [Failure] with the parsed error.
  * @param appDeclaration The Koin app declaration that is used to declare additional modules.
  */
-fun <ModelData, Environment: ModelEnvironment, ServerError, Api: ClientApi<IdentifiableClaims>> initKoinSharedWithoutAuthentication(
+fun <ModelData, MockConfig, Environment: ModelEnvironment, Api: ClientApi<IdentifiableClaims>> initKoinSharedWithoutAuthentication(
     serviceName: String,
     sharedAppModule: Module,
-    model: () -> Model<ModelData, IdentifiableClaims, Environment, Unit, Api>,
+    model: () -> Model<ModelData, MockConfig, IdentifiableClaims, Environment, Unit, Api>,
     languageProvider: LanguageProvider = DefaultLanguageProvider(fallbackLanguageCode = "en"),
     stringsProvider: CommonStringsProvider = object : CommonStringsProvider {
         override val errorNoConnection: String
@@ -67,24 +67,14 @@ fun <ModelData, Environment: ModelEnvironment, ServerError, Api: ClientApi<Ident
             get() = "Unknown error"
 
     },
-    serverErrorParser: ServerErrorParser<ServerError> = object: ServerErrorParser<ServerError> {
-        override suspend fun parseError(response: HttpResponse): ServerError? {
-            return null
-        }
-
-        override suspend fun <T> toClientFailure(response: HttpResponse, error: ServerError?, exception: Exception): Failure<T, ServerError> {
-            return Failure(response.status.value, response.status.description, FailureKind.CLIENT, exception, error)
-        }
-    },
     appDeclaration: KoinAppDeclaration = {}
-) = initKoinShared<ModelData, Environment, Unit, IdentifiableClaims, Claims, ServerError, Api>(
+) = initKoinShared<ModelData, MockConfig, Environment, Unit, IdentifiableClaims, Claims, Api>(
     serviceName,
     sharedAppModule,
     model,
     null,
     languageProvider,
     stringsProvider,
-    serverErrorParser,
     appDeclaration
 )
 
@@ -100,11 +90,11 @@ fun <ModelData, Environment: ModelEnvironment, ServerError, Api: ClientApi<Ident
  * @param serverErrorParser The server error parser that is used to parse server errors. In case your api returns server errors, you can use this to parse them and return a [Failure] with the parsed error.
  * @param appDeclaration The Koin app declaration that is used to declare additional modules.
  */
-fun <ModelData, Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims, ServerError, Api: ClientApi<AccessTokenClaims>> initKoinShared(
+fun <ModelData, MockConfig, Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims, Api: ClientApi<AccessTokenClaims>> initKoinShared(
     serviceName: String,
     sharedAppModule: Module,
-    model: () -> Model<ModelData, AccessTokenClaims, Environment, UserId, Api>,
-    authentication: Authentication<AccessTokenClaims, RefreshTokenClaims, ServerError>?,
+    model: () -> Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api>,
+    authentication: Authentication<AccessTokenClaims, RefreshTokenClaims>?,
     languageProvider: LanguageProvider = DefaultLanguageProvider(fallbackLanguageCode = "en"),
     stringsProvider: CommonStringsProvider = object : CommonStringsProvider {
         override val errorNoConnection: String
@@ -112,15 +102,6 @@ fun <ModelData, Environment: ModelEnvironment, UserId, AccessTokenClaims: Identi
         override val errorUnknown: String
             get() = "Unknown error"
 
-    },
-    serverErrorParser: ServerErrorParser<ServerError> = object: ServerErrorParser<ServerError> {
-        override suspend fun parseError(response: HttpResponse): ServerError? {
-            return null
-        }
-
-        override suspend fun <T> toClientFailure(response: HttpResponse, error: ServerError?, exception: Exception): Failure<T, ServerError> {
-            return Failure(response.status.value, response.status.description, FailureKind.CLIENT, exception, error)
-        }
     },
     appDeclaration: KoinAppDeclaration = {}
 ) =
@@ -142,19 +123,18 @@ fun <ModelData, Environment: ModelEnvironment, UserId, AccessTokenClaims: Identi
         } }
         it.single { languageProvider }
         it.single { stringsProvider }
-        it.single { serverErrorParser }
-        it.single { authentication?.authApi?.invoke(this) ?: object: AuthApi<ServerError> {
-            override suspend fun refresh(refreshToken: String): ApiResponse<Tokens, ServerError> {
+        it.single { authentication?.authApi?.invoke(this) ?: object: AuthApi {
+            override suspend fun refresh(refreshToken: String): FetcherResult<Tokens> {
                 throw NotImplementedError()
             }
         } }
         it.single {
-            val m: Model<ModelData, AccessTokenClaims, Environment, UserId, Api> = get()
-            ModelHelper<ModelData, AccessTokenClaims, Api, ServerError>(m.apiFlow, m.modelData)
+            val m: Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api> = get()
+            ModelHelper<ModelData, AccessTokenClaims, Api>(m.apiFlow, m.modelData)
         }
     }
 
-fun <ModelData, Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaims, Api: ClientApi<AccessTokenClaims>> sharedModule(model: () -> Model<ModelData, AccessTokenClaims, Environment, UserId, Api>, additionalInjections: (Module) -> (Unit)): Module {
+fun <ModelData, MockConfig, Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaims, Api: ClientApi<AccessTokenClaims>> sharedModule(model: () -> Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api>, additionalInjections: (Module) -> (Unit)): Module {
     return module {
         additionalInjections(this)
 

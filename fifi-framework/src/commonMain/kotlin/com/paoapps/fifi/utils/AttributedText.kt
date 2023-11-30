@@ -67,8 +67,8 @@ sealed class AttributedText {
         when(this) {
             is Text -> stringBuilder.append(text)
             is Composition -> nodes.forEach { stringBuilder.append(it.string) }
-            // TODO: removed Image support
-//            is Image -> {}
+            is Link -> stringBuilder.append(text.string)
+
         }
         return stringBuilder.toString()
     }
@@ -81,8 +81,7 @@ sealed class AttributedText {
         constructor(vararg nodes: AttributedText): this(nodes.asList())
     }
 
-    // TODO: removed Image support
-//    data class Image(val image: com.fificard.Image): AttributedText()
+    data class Link(val text: Text, val url: String): AttributedText()
 
     sealed class Attribute {
         data class Font(val font: TextDefinition.Font) : Attribute()

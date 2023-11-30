@@ -33,6 +33,8 @@ quartz = "2.3.2"
 
 krypto = "4.0.2"
 
+blockedcache = "0.0.1"
+
 
 [libraries]
 plugin-android = { module = "com.android.tools.build:gradle", version.ref = "plugin-android" }
@@ -101,6 +103,8 @@ multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", vers
 timeshape = { module = "net.iakovlev:timeshape", version.ref = "timeshape" }
 
 quartz-scheduler = { module = "org.quartz-scheduler:quartz", version.ref = "quartz" }
+
+blockedcache = { module = "com.paoapps.blockedcache:blocked-cache", version.ref = "blockedcache" }
 
 [bundles]
 plugins = ["plugin-android", "plugin-kotlin", "plugin-kotlin-serialization", "plugin-gver"]

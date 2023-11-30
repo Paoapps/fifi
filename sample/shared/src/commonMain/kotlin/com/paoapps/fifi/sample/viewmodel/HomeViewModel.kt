@@ -1,6 +1,5 @@
 package com.paoapps.fifi.sample.viewmodel
 
-import com.paoapps.fifi.domain.network.LoadingState
 import com.paoapps.fifi.viewmodel.AbstractEvent
 import com.paoapps.fifi.viewmodel.AbstractViewModel
 
@@ -9,7 +8,7 @@ abstract class HomeViewModel: AbstractViewModel<HomeViewModel.Output, HomeViewMo
     data class Output(
         val title: String,
         val buttons: List<Button>,
-        val loadingState: LoadingState,
+        val isLoading: Boolean,
         val item: Item?
     ) {
         data class Button(

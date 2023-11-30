@@ -14,10 +14,11 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
 
 class AppModelImpl(
     environment: AppModelEnvironment,
-): ModelImpl<ModelData, IdentifiableClaims, AppModelEnvironment, Api, Unit, Unit>(
+): ModelImpl<ModelData, Unit, IdentifiableClaims, AppModelEnvironment, Api, Unit>(
     MainScope(),
     environment,
 ), AppModel {
@@ -25,12 +26,17 @@ class AppModelImpl(
         val serializer = ModelData.serializer()
         return serializer
     }
+    override val mockConfigSerializer: KSerializer<Unit>
+        get() = Unit.serializer()
 
     override fun createModelData(launchData: LaunchData) = ModelData(
         appData = AppData(
             launchData = launchData,
         )
     )
+
+    override fun createMockConfig() {
+    }
 
     override fun copyLaunchData(modelData: ModelData, launchData: LaunchData) = modelData.copy(appData = modelData.appData.copy(launchData = launchData))
 

@@ -23,5 +23,5 @@ open class ClientApiImpl<Environment: ModelEnvironment, AccessTokenClaims: Ident
     val tokensFlow = MutableStateFlow(tokensStore.loadTokens(environment))
     override val claimsFlow: Flow<AccessTokenClaims?> = tokensFlow.map { it?.accessToken?.let(tokenDecoder::accessTokenClaims) }.distinctUntilChanged()
 
-    protected val apiHelper = ApiHelper<AccessTokenClaims, RefreshTokenClaims, ServerError>(tokensFlow, environment, appVersion, additionalHeaders)
+    protected val apiHelper = ApiHelper<AccessTokenClaims, RefreshTokenClaims>(tokensFlow, environment, appVersion, additionalHeaders)
 }
