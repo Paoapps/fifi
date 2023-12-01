@@ -15,13 +15,16 @@ import com.paoapps.fifi.log.warn
 import com.paoapps.fifi.model.ModelEnvironment
 import io.ktor.client.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.datetime.Clock
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
@@ -64,6 +67,9 @@ open class ApiHelper<AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: 
         install(Logging) {
             logger = Logger.SIMPLE
             level = LogLevel.ALL
+        }
+        install(ContentNegotiation) {
+            json(jsonParser)
         }
     }
 ):
