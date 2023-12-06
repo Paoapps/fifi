@@ -33,7 +33,7 @@ quartz = "2.3.2"
 
 krypto = "4.0.2"
 
-blockedcache = "0.0.1"
+blockedcache = "0.0.2"
 
 
 [libraries]
