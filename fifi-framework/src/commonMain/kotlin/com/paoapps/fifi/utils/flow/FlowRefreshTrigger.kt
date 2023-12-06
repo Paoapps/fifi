@@ -2,12 +2,6 @@ package com.paoapps.fifi.utils.flow
 
 import kotlin.random.Random
 
-enum class Fetch {
-    FORCE,
-    CACHE,
-    NO_FETCH;
-}
-
 sealed class FlowRefreshTrigger {
     data class FromCache(private val id: String = Random.nextInt().toString()) : FlowRefreshTrigger()
 

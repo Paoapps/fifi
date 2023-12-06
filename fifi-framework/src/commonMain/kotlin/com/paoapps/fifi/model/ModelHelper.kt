@@ -3,13 +3,13 @@ package com.paoapps.fifi.model
 import com.paoapps.blockedcache.BlockedCache
 import com.paoapps.blockedcache.BlockedCacheData
 import com.paoapps.blockedcache.CacheResult
+import com.paoapps.blockedcache.Fetch
 import com.paoapps.blockedcache.FetcherResult
 import com.paoapps.blockedcache.asCacheResult
 import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.auth.IdentifiableClaims
 import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.model.datacontainer.DataContainer
-import com.paoapps.fifi.utils.flow.Fetch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -75,10 +75,10 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
         withBlockedCacheFlow(
             debugName,
             blockedCache = blockedCache,
-            forceRefresh = fetch == Fetch.FORCE,
+            forceRefresh = fetch is Fetch.Force,
             apiCall = apiCall,
             predicate = predicate,
-            condition = condition.map { it && fetch != Fetch.NO_FETCH },
+            condition = condition.map { it && fetch !is Fetch.NoFetch },
             processData = processData
         )
 

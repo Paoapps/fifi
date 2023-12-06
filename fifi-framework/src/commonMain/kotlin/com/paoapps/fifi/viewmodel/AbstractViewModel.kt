@@ -1,9 +1,9 @@
 package com.paoapps.fifi.viewmodel
 
+import com.paoapps.blockedcache.Fetch
 import com.paoapps.fifi.log.warn
 import com.paoapps.fifi.ui.component.ToastDefinition
 import com.paoapps.fifi.utils.ActionHandler
-import com.paoapps.fifi.utils.flow.Fetch
 import com.paoapps.fifi.utils.flow.FlowAdapter
 import com.paoapps.fifi.utils.flow.FlowRefreshTrigger
 import com.paoapps.fifi.utils.flow.wrap
@@ -89,8 +89,8 @@ abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewMo
         }.distinctUntilChanged()
     }
 
-    fun <R> createRefreshableFetchFlow(data: (refresh: Fetch) -> Flow<R>) = createRefreshableFetchFlow(default = Fetch.CACHE, data = data)
+    fun <R> createRefreshableFetchFlow(data: (refresh: Fetch) -> Flow<R>) = createRefreshableFetchFlow(default = Fetch.Cache, data = data)
 
     fun <R> createRefreshableFetchFlow(default: Fetch, data: (refresh: Fetch) -> Flow<R>): Flow<R> =
-        createRefreshableFlow { data(if (it) Fetch.FORCE else default) }
+        createRefreshableFlow { data(if (it) Fetch.Force() else default) }
 }
