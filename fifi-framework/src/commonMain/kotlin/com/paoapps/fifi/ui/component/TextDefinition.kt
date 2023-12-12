@@ -15,6 +15,7 @@ object TextDefinition {
         val lineHeight: Int = (size.toFloat() * 1.3).toInt(),
         val letterSpacing: Double = 0.0,
         val style: Style = Style.REGULAR,
+        val decoration: TextDecoration = TextDecoration.NONE,
         val textStyle: TextStyle = TextStyle.BODY
     ) {
         enum class Weight {
@@ -41,6 +42,12 @@ object TextDefinition {
             FOOTNOTE,
             CAPTION_1,
             CAPTION_2
+        }
+
+        enum class TextDecoration {
+            NONE,
+            UNDERLINE,
+            STRIKETHROUGH
         }
     }
 }
