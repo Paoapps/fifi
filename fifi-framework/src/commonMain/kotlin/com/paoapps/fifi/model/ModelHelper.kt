@@ -53,12 +53,13 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
         debugName: String? = null,
         blockedCache: BlockedCache<T>,
         forceRefresh: Boolean,
+        forceRefreshDelay: Long? = null,
         apiCall: suspend (api: Api, modelData: ModelData) -> FetcherResult<T>,
         predicate: (T, Instant) -> Boolean = { _, _ -> true },
         condition: Flow<Boolean> = flowOf(true),
         processData: (responseData: BlockedCacheData<T>, modelData: ModelData) -> ModelData
     ): Flow<CacheResult<T>> = apiFlow.flatMapLatest { api ->
-        withBlockedCacheFlow(debugName, blockedCache, forceRefresh, {
+        withBlockedCacheFlow(debugName, blockedCache, forceRefresh, forceRefreshDelay, {
             apiCall(api, it)
         }, predicate, condition, processData)
     }
@@ -76,6 +77,7 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
             debugName,
             blockedCache = blockedCache,
             forceRefresh = fetch is Fetch.Force,
+            forceRefreshDelay = (fetch as? Fetch.Force)?.minimumDelay,
             apiCall = apiCall,
             predicate = predicate,
             condition = condition.map { it && fetch !is Fetch.NoFetch },
@@ -86,6 +88,7 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
         debugName: String? = null,
         blockedCache: BlockedCache<T>,
         forceRefresh: Boolean,
+        forceRefreshDelay: Long? = null,
         apiCall: suspend (modelData: ModelData) -> FetcherResult<T>,
         predicate: (T, Instant) -> Boolean = { _, _ -> true },
         condition: Flow<Boolean> = flowOf(true),
@@ -97,6 +100,7 @@ class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientA
                 debugName?.let { debug("🔵 api call of $it") }
                 blockedCache.getData(
                     forceRefresh = forceRefresh,
+                    forceRefreshDelay = forceRefreshDelay,
                     predicate = predicate,
                     condition = condition,
                     fetcher = { apiCall(modelData) },
