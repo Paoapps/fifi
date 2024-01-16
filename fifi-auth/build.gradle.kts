@@ -8,28 +8,10 @@ plugins {
 group = "com.paoapps.fifi"
 version = "0.0.11"
 
-val ktorVersion = "2.1.3"
-val logbackVersion = "1.2.3"
-val serializationVersion = "1.4.0"
-val coroutinesVersion = "1.6.4"
-val koinVersion = "3.4.3"
-val dateTimeVersion = "0.4.0"
-val kermitVersion = "1.0.0"
-val lifecycleVersion = "2.2.0"
-
 kotlin {
     android {
         publishLibraryVariants("debug", "release")
     }
-
-//    jvm {
-//        compilations.all {
-//            kotlinOptions.jvmTarget = "1.8"
-//        }
-//        testRuns["test"].executionTask.configure {
-//            useJUnitPlatform()
-//        }
-//    }
 
     listOf(
         iosX64(),
@@ -37,7 +19,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = "shared"
+            baseName = "fifi-auth"
         }
     }
     
@@ -45,6 +27,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(project(":fifi-common"))
+                implementation(project(":fifi-framework"))
 
                 //Network
                 implementation(libs.bundles.ktor.common)
@@ -61,6 +44,8 @@ kotlin {
                 //Coroutines
                 implementation(libs.kotlinx.coroutines.core)
 
+                implementation(libs.multiplatform.settings)
+
                 implementation(libs.blockedcache)
             }
 
@@ -73,18 +58,12 @@ kotlin {
         }
 
         val androidMain by getting {
-            dependencies {
-                implementation("io.ktor:ktor-client-android:$ktorVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
-                implementation("com.google.android.material:material:1.2.1")
-                implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
-                implementation(libs.koin.android)
-
-                implementation(libs.bundles.android)
-                implementation(libs.bundles.android.ui)
-            }
-
             kotlin.srcDirs(project.projectDir.resolve("build/src/androidMain/kotlin"))
+
+            dependencies {
+                implementation(libs.koin.android)
+                implementation(libs.androidx.security.crypto)
+            }
         }
 //        val androidTest by getting {
 //            dependencies {
@@ -126,12 +105,5 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    namespace = "com.paoapps.fifi.framework"
-
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
-    }
+    namespace = "com.paoapps.fifi.auth"
 }

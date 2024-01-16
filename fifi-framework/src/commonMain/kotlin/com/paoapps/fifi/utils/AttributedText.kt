@@ -60,6 +60,26 @@ fun attributed(format: ((String, String, String) -> String), argument1: String, 
     ))
 }
 
+@JvmName("attributedMulti4List")
+fun attributed(format: ((String, String, String, String) -> String), argument1: String, argument2: String, argument3: String, argument4: String, attributes: List<AttributedText.Attribute>, defaultAttributes: List<AttributedText.Attribute> = emptyList()): AttributedText {
+    val string = format(argument1, argument2, argument3, argument4)
+    val argument1Index = string.indexOf(argument1)
+    val argument2Index = string.indexOf(argument2)
+    val argument3Index = string.indexOf(argument3)
+    val argument4Index = string.indexOf(argument4)
+    return AttributedText.Composition(listOf(
+        AttributedText.Text(string.substring(0, argument1Index), defaultAttributes),
+        AttributedText.Text(argument1, attributes),
+        AttributedText.Text(string.substring(argument1Index + argument1.length, argument2Index), defaultAttributes),
+        AttributedText.Text(argument2, attributes),
+        AttributedText.Text(string.substring(argument2Index + argument2.length, argument3Index), defaultAttributes),
+        AttributedText.Text(argument3, attributes),
+        AttributedText.Text(string.substring(argument3Index + argument3.length, argument4Index), defaultAttributes),
+        AttributedText.Text(argument4, attributes),
+        AttributedText.Text(string.substring(argument4Index + argument4.length), defaultAttributes)
+    ))
+}
+
 sealed class AttributedText {
 
     val string: String get() {

@@ -7,10 +7,10 @@ import com.paoapps.blockedcache.Fetch
 import com.paoapps.blockedcache.FetcherResult
 import com.paoapps.blockedcache.asCacheResult
 import com.paoapps.fifi.api.ClientApi
-import com.paoapps.fifi.auth.IdentifiableClaims
 import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.model.datacontainer.DataContainer
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -19,12 +19,12 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 
-class ModelHelper<ModelData, AccessTokenClaims: IdentifiableClaims, Api: ClientApi<AccessTokenClaims>>(val apiFlow: Flow<Api>, val modelDataContainer: DataContainer<ModelData>) {
+class ModelHelper<ModelData, Api: ClientApi>(val apiFlow: StateFlow<Api>, val modelDataContainer: DataContainer<ModelData>) {
 
     suspend fun api(): Api = apiFlow.first()
 
     fun <R: Any> createApiCallFlow(
-        data: suspend (api: ClientApi<AccessTokenClaims>) -> FetcherResult<R>,
+        data: suspend (api: Api) -> FetcherResult<R>,
     ): Flow<CacheResult<R>> {
         return apiFlow.flatMapLatest { api ->
             flow<CacheResult<R>> {

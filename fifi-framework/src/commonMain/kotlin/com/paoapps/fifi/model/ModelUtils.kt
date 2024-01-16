@@ -3,10 +3,10 @@ package com.paoapps.fifi.model
 import com.paoapps.blockedcache.BlockedCache
 import com.paoapps.blockedcache.BlockedCacheData
 import com.paoapps.fifi.api.ClientApi
-import com.paoapps.fifi.auth.IdentifiableClaims
 import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -23,17 +23,15 @@ fun appBecameActive() {
     AppBecameActive.value = Random.nextInt().toString()
 }
 
-fun <T: Any, ModelData, MockConfig, AccessTokenClaims : IdentifiableClaims, Environment : ModelEnvironment, UserId, Api : ClientApi<AccessTokenClaims>> createBlockCache(
-    model: Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api>,
+fun <T: Any, ModelData, MockConfig, Environment : ModelEnvironment, Api : ClientApi> createBlockCache(
+    model: Model<ModelData, MockConfig, Environment, Api>,
     duration: Duration,
     expire: Duration?,
     selector: (ModelData) -> BlockedCacheData<T>?,
     name: String,
-    triggerOnUserIdChange: Boolean = true,
+    trigger: Flow<Any?> = flowOf(Unit),
     isDebugEnabled: Boolean = false
 ): BlockedCache<T> {
-
-    val userIdChangedFlow = if (triggerOnUserIdChange) model.userIdFlow else flowOf(Unit)
 
     val dataFlow = model.modelData.dataFlow.map {
         if (isDebugEnabled) {
@@ -45,7 +43,7 @@ fun <T: Any, ModelData, MockConfig, AccessTokenClaims : IdentifiableClaims, Envi
     return BlockedCache(
         duration.inWholeMilliseconds,
         expire?.inWholeMilliseconds,
-        combine(AppBecameActiveFlow, userIdChangedFlow) { _, _ -> },
+        combine(AppBecameActiveFlow, trigger) { _, _ -> },
         dataFlow,
         name = name,
         isDebugEnabled = isDebugEnabled

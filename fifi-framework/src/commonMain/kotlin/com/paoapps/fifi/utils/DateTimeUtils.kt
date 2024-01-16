@@ -53,7 +53,7 @@ fun LocalDate.atEndOfDayOfWeek(day: DayOfWeek): LocalDate {
 
 fun getLocalTimeZone(): TimeZone {
     return TimeZone.currentSystemDefault()
-} 
+}
 
 // copied internal fun from klock
 val LocalDate.weekOfYear0: Int
@@ -99,6 +99,10 @@ fun LocalDate.isSameWeek(other: LocalDate): Boolean {
             && other <= this.atEndOfIsoWeek
 }
 
+fun LocalDate.isSameMonth(other: LocalDate): Boolean {
+    return other.year == this.year && other.month == this.month
+}
+
 /**
  * Checks if this dates week belongs to the given year. According to ISO 8601, a week belongs to a year if at least for
  * days fall in the given year.
@@ -133,4 +137,18 @@ fun countDaysInWeek(year: Int, startDate: LocalDate): Int {
     }
 
     return count
+}
+
+fun LocalDate.rangeTo(other: LocalDate, unit: DateTimeUnit.DateBased = DateTimeUnit.DAY) = object : Iterable<LocalDate> {
+    override fun iterator() = object : Iterator<LocalDate> {
+        var current = this@rangeTo
+
+        override fun hasNext() = current <= other
+
+        override fun next(): LocalDate {
+            val result = current
+            current = current.plus(1, unit)
+            return result
+        }
+    }
 }

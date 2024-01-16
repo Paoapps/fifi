@@ -1,9 +1,6 @@
 package com.paoapps.fifi.model
 
 import com.paoapps.fifi.api.ClientApi
-import com.paoapps.fifi.auth.IdentifiableClaims
-import com.paoapps.fifi.auth.TokenStore
-import com.paoapps.fifi.auth.Tokens
 import com.paoapps.fifi.domain.LaunchData
 import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.model.datacontainer.CDataContainer
@@ -12,26 +9,27 @@ import com.paoapps.fifi.model.datacontainer.DataProcessor
 import com.paoapps.fifi.model.datacontainer.wrap
 import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import org.koin.core.component.KoinComponent
 
-abstract class ModelImpl<ModelData, MockConfig, AccessTokenClaims: IdentifiableClaims, Environment: ModelEnvironment, Api: ClientApi<AccessTokenClaims>, UserId>(
+abstract class ModelImpl<ModelData, MockConfig, Environment: ModelEnvironment, Api: ClientApi>(
     scope: CoroutineScope,
     environment: Environment,
-): KoinComponent, Model<ModelData, MockConfig, AccessTokenClaims, Environment, UserId, Api> {
+): KoinComponent, Model<ModelData, MockConfig, Environment, Api> {
 
     abstract val modelDataSerializer: KSerializer<ModelData>
     abstract val mockConfigSerializer: KSerializer<MockConfig>
 
     open val dataPreProcessors: List<DataProcessor<ModelData>> = emptyList()
 
-    private val environmentStateFlow = MutableStateFlow(environment)
+    protected val environmentStateFlow = MutableStateFlow(environment)
     override val environmentFlow = environmentStateFlow.wrap(scope)
     private val appVersionFlow = MutableStateFlow("")
 
-    override val apiFlow: MutableStateFlow<Api> by lazy { MutableStateFlow(createApi(environment, "")) }
+    final override val apiFlow: MutableStateFlow<Api> by lazy { MutableStateFlow(createApi(environment, "")) }
 
     override val modelData: CDataContainer<ModelData> by lazy {
         DataContainerImpl(modelDataSerializer, dataPreProcessors).wrap()
@@ -83,9 +81,5 @@ abstract class ModelImpl<ModelData, MockConfig, AccessTokenClaims: IdentifiableC
             }
         }
         appVersionFlow.value = data?.let { getLaunchData(it) }?.currentAppVersion ?: ""
-    }
-
-    override fun storeTokens(tokens: Tokens) {
-        getKoin().get<TokenStore>().saveTokens(tokens, environmentStateFlow.value)
     }
 }

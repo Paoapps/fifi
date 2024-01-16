@@ -20,16 +20,3 @@ data class Language(val languageCode: String, val countryCode: String? = null) {
         }
     }
 }
-
-enum class SupportedLanguage(val code: String) {
-    ENGLISH("en"),
-    SPANISH("es"),
-    ;
-
-    val language: Language
-        get() = Language(code)
-
-    companion object {
-        fun fromCode(code: String) = SupportedLanguage.values().firstOrNull { it.code == code }
-    }
-}
