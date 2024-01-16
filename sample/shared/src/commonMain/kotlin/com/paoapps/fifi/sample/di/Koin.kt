@@ -1,7 +1,6 @@
 package com.paoapps.fifi.sample.di
 
-import com.paoapps.fifi.auth.IdentifiableClaims
-import com.paoapps.fifi.di.initKoinSharedWithoutAuthentication
+import com.paoapps.fifi.di.initKoinShared
 import com.paoapps.fifi.model.Model
 import com.paoapps.fifi.sample.api.Api
 import com.paoapps.fifi.sample.domain.ModelData
@@ -22,16 +21,16 @@ fun initKoinApp(
     sharedAppModule: Module,
     model: () -> AppModel,
     appDeclaration: KoinAppDeclaration = {}
-) = initKoinSharedWithoutAuthentication<ModelData, Unit, AppModelEnvironment, Api>(
-    "com.paoapps.fifi.sample",
+) = initKoinShared<ModelData, Unit, AppModelEnvironment, Api>(
     sharedAppModule,
-    model
-) {
-    appDeclaration()
-    modules(module {
-        single { get<Model<ModelData, Unit, IdentifiableClaims, AppModelEnvironment, Int, Api>>() as AppModel }
+    model,
+    appDeclaration = {
+        appDeclaration()
+        modules(module {
+            single { get<Model<ModelData, Unit, AppModelEnvironment, Api>>() as AppModel }
 
-        single<CoffeeModel> { CoffeeModelImpl(get(), get()) }
-    }, sharedAppModule)
-}
+            single<CoffeeModel> { CoffeeModelImpl(get(), get()) }
+        }, sharedAppModule)
+    }
+)
 

@@ -1,8 +1,7 @@
 package com.paoapps.fifi.sample.api
 
 import com.paoapps.fifi.api.ClientApi
-import com.paoapps.fifi.auth.IdentifiableClaims
 
-interface Api: ClientApi<IdentifiableClaims> {
+interface Api: ClientApi {
     val coffeeApi: CoffeeApi
 }

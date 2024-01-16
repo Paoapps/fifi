@@ -1,6 +1,5 @@
 package com.paoapps.fifi.sample.model
 
-import com.paoapps.fifi.auth.IdentifiableClaims
 import com.paoapps.fifi.model.Model
 import com.paoapps.fifi.model.ModelEnvironment
 import com.paoapps.fifi.sample.api.Api
@@ -52,5 +51,5 @@ sealed class AppModelEnvironment(val environmentName: EnvironmentName, val confi
     }
 }
 
-interface AppModel: Model<ModelData, Unit, IdentifiableClaims, AppModelEnvironment, Unit, Api> {
+interface AppModel: Model<ModelData, Unit, AppModelEnvironment, Api> {
 }

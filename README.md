@@ -50,7 +50,7 @@ Set up a Kotlin Multiplatform Mobile (KMM) project as outlined [here](https://ko
 In your shared module, create a dependency to the `fifi-framework` library.
 
 ```kotlin
-implementation("com.paoapps.fifi:fifi-framework:0.0.1")
+implementation("com.paoapps.fifi:fifi-framework:0.0.11")
 ```
 
 ## Setup

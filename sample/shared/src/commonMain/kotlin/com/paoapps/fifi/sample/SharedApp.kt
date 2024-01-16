@@ -1,7 +1,6 @@
 package com.paoapps.fifi.sample
 
 import com.paoapps.fifi.sample.model.AppModelEnvironment
-import com.paoapps.fifi.localization.CommonStringsProvider
 import com.paoapps.fifi.sample.di.initKoinApp
 import com.paoapps.fifi.sample.model.AppModelImpl
 import com.paoapps.fifi.sample.viewmodel.CoffeeDetailViewModel
