@@ -7,6 +7,8 @@ interface ModelEnvironment {
     val isMock: Boolean
 }
 
-interface ModelEnvironmentProvider {
-    val environments: List<ModelEnvironment>
+interface ModelEnvironmentFactory<Environment: ModelEnvironment> {
+    val defaultEnvironment: Environment
+
+    fun fromName(name: String): Environment
 }

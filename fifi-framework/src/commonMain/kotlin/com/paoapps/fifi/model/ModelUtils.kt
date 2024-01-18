@@ -2,8 +2,8 @@ package com.paoapps.fifi.model
 
 import com.paoapps.blockedcache.BlockedCache
 import com.paoapps.blockedcache.BlockedCacheData
-import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.log.debug
+import com.paoapps.fifi.model.datacontainer.DataContainer
 import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -23,8 +23,8 @@ fun appBecameActive() {
     AppBecameActive.value = Random.nextInt().toString()
 }
 
-fun <T: Any, ModelData, MockConfig, Environment : ModelEnvironment, Api : ClientApi> createBlockCache(
-    model: Model<ModelData, MockConfig, Environment, Api>,
+fun <ModelData: Any, T: Any> createBlockCache(
+    dataContainer: DataContainer<ModelData>,
     duration: Duration,
     expire: Duration?,
     selector: (ModelData) -> BlockedCacheData<T>?,
@@ -33,7 +33,7 @@ fun <T: Any, ModelData, MockConfig, Environment : ModelEnvironment, Api : Client
     isDebugEnabled: Boolean = false
 ): BlockedCache<T> {
 
-    val dataFlow = model.modelData.dataFlow.map {
+    val dataFlow = dataContainer.dataFlow.map {
         if (isDebugEnabled) {
             debug("createBlockCache($name)")
         }

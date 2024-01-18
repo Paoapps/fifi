@@ -6,11 +6,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ModelData(
-    val appData: AppData,
     val hotCoffee: BlockedCacheData<List<Coffee>> = BlockedCacheData(),
-)
-
-@Serializable
-data class AppData(
-    val launchData: LaunchData,
 )

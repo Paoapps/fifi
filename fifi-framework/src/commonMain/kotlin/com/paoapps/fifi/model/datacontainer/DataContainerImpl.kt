@@ -4,14 +4,18 @@ import com.paoapps.fifi.api.jsonParser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.KSerializer
 
-class DataContainerImpl<T>(val serializer: KSerializer<T>, val dataPreProcessors: List<DataProcessor<T>> = emptyList()): DataContainer<T> {
+class DataContainerImpl<T: Any>(
+    val serializer: KSerializer<T>,
+    val initialData: T,
+    val dataPreProcessors: List<DataProcessor<T>> = emptyList(),
+): DataContainer<T> {
 
     private val _dataFlow = MutableStateFlow<T?>(null)
     override val dataFlow = _dataFlow
 
     override var data: T?
         set(value) {
-            val processedData = dataPreProcessors.fold(value) { data, processor -> data?.let(processor::process) }
+            val processedData = dataPreProcessors.fold(value) { data, processor -> data?.let { processor.process(it) } }
             _dataFlow.value = processedData
         }
         get() = _dataFlow.value
@@ -22,10 +26,19 @@ class DataContainerImpl<T>(val serializer: KSerializer<T>, val dataPreProcessors
         }
         set(value) {
             try {
-                data = value?.let { jsonParser.decodeFromString(serializer, it) }
+                val parsedData = value?.let {
+                    jsonParser.decodeFromString(serializer, it)
+                }
+                if (parsedData != null) {
+                    data = parsedData
+                } else {
+                    _dataFlow.value = initialData
+                }
             } catch (e: Throwable) {
-                // If parsing of provided json fails ignore the json.
-                println("Cannot parse json, ignore it., message: ${e.message}")
+                println("Cannot parse json. message: ${e.message}")
+                if (data == null) {
+                    _dataFlow.value = initialData
+                }
             }
         }
 

@@ -15,8 +15,6 @@ class AppPreferences: KoinComponent {
 
     private val NAME = "appPrefs"
     private val ENVIRONMENT = "environment"
-    private val PUSH_ENABLED = "PUSH_ENABLED"
-    private val UPDATE_REQUEST_DENIED = "UPDATE_REQUEST_DENIED"
 
     fun getPreferences(context: Context): SharedPreferences =
         context.getSharedPreferences(NAME, Context.MODE_PRIVATE)

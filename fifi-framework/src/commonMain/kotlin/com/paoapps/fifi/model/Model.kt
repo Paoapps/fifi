@@ -2,19 +2,27 @@ package com.paoapps.fifi.model
 
 import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.model.datacontainer.CDataContainer
+import com.paoapps.fifi.model.datacontainer.DataProcessor
 import com.paoapps.fifi.utils.flow.FlowAdapter
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.KSerializer
 
-interface Model<ModelData, MockConfig, Environment: ModelEnvironment, Api: ClientApi> {
+interface Model<Environment: ModelEnvironment, Api: ClientApi> {
 
-    val modelData: CDataContainer<ModelData>
-    val mockConfigData: CDataContainer<MockConfig>
+    val appVersion: String
     val apiFlow: StateFlow<Api>
 
+    val currentEnvironment: Environment
     val environmentFlow: FlowAdapter<Environment>
 
-    fun updateEnvironment(environment: Environment)
-    fun registerLaunch(version: String)
+    val dataContainers: Map<String, CDataContainer<*>>
 
+    fun updateEnvironment(environment: Environment)
+
+    fun <T: Any> registerPersistentData(
+        name: String,
+        serializer: KSerializer<T>,
+        initialData: T,
+        dataPreProcessors: List<DataProcessor<T>> = emptyList(),
+    ): CDataContainer<T>
 }

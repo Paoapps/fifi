@@ -1,43 +1,19 @@
 package com.paoapps.fifi.sample.model
 
-import com.paoapps.fifi.domain.LaunchData
 import com.paoapps.fifi.model.ModelImpl
 import com.paoapps.fifi.sample.api.Api
 import com.paoapps.fifi.sample.api.impl.ApiImpl
 import com.paoapps.fifi.sample.api.mock.MockApi
-import com.paoapps.fifi.sample.domain.AppData
-import com.paoapps.fifi.sample.domain.ModelData
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
 
 class AppModelImpl(
+    appVersion: String,
     environment: AppModelEnvironment,
-): ModelImpl<ModelData, Unit, AppModelEnvironment, Api>(
+): ModelImpl<AppModelEnvironment, Api>(
+    appVersion,
     MainScope(),
     environment,
 ), AppModel {
-    override val modelDataSerializer: KSerializer<ModelData> get() {
-        val serializer = ModelData.serializer()
-        return serializer
-    }
-    override val mockConfigSerializer: KSerializer<Unit>
-        get() = Unit.serializer()
-
-    override fun createModelData(launchData: LaunchData) = ModelData(
-        appData = AppData(
-            launchData = launchData,
-        )
-    )
-
-    override fun createMockConfig() {
-    }
-
-    override fun copyLaunchData(modelData: ModelData, launchData: LaunchData) = modelData.copy(appData = modelData.appData.copy(launchData = launchData))
-
-    override fun getLaunchData(modelData: ModelData) = modelData.appData.launchData
 
     override fun createApi(environment: AppModelEnvironment, appVersion: String) = when(environment.environmentName) {
         AppModelEnvironment.EnvironmentName.MOCK -> MockApi()

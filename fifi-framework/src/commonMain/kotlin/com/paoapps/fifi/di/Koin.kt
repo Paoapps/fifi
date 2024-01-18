@@ -1,57 +1,201 @@
 package com.paoapps.fifi.di
 
 import com.paoapps.fifi.api.ClientApi
+import com.paoapps.fifi.domain.LaunchData
 import com.paoapps.fifi.localization.DefaultLanguageProvider
 import com.paoapps.fifi.localization.LanguageProvider
 import com.paoapps.fifi.model.Model
 import com.paoapps.fifi.model.ModelEnvironment
+import com.paoapps.fifi.model.ModelEnvironmentFactory
 import com.paoapps.fifi.model.ModelHelper
+import com.paoapps.fifi.model.datacontainer.CDataContainer
+import com.paoapps.fifi.model.datacontainer.DataProcessor
+import com.paoapps.fifi.model.datacontainer.wrap
+import kotlinx.serialization.KSerializer
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
+import org.koin.core.qualifier.Qualifier
+import org.koin.core.qualifier.named
+import org.koin.core.qualifier.qualifier
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 
-enum class PlatformModuleQualifier {
-    ENCRYPTED_SETTINGS,
-    SETTINGS
-}
-
-private fun <ModelData, MockConfig, Environment: ModelEnvironment, Api: ClientApi> initKoin(sharedAppModule: Module, model: () -> Model<ModelData, MockConfig, Environment, Api>, appDeclaration: KoinAppDeclaration = {}, additionalInjections: (Module) -> (Unit)) = startKoin {
+private fun <Environment: ModelEnvironment, Api: ClientApi> initKoin(
+    appVersion: String,
+    sharedAppModule: Module,
+    model: (String) -> Model<Environment, Api>,
+    appDeclaration: KoinAppDeclaration = {},
+    additionalInjections: (Module) -> (Unit)
+) = startKoin {
     appDeclaration()
     modules(
-        sharedModule(model, additionalInjections),
+        sharedModule(appVersion, model, additionalInjections),
         sharedAppModule,
     )
+}
+
+interface PersistentDataRegistry {
+
+    fun <T: Any> registerPersistentData(
+        name: String,
+        serializer: KSerializer<T>,
+        initialData: T,
+        dataPreProcessors: List<DataProcessor<T>> = emptyList(),
+    )
+
+    fun <T: Any, E : Enum<E>> registerPersistentData(
+        name: E,
+        serializer: KSerializer<T>,
+        initialData: T,
+        dataPreProcessors: List<DataProcessor<T>> = emptyList(),
+    )
+}
+
+val LAUNCH_DATA_QUALIFIER = "launchData"
+internal val DATA_CONTAINERS_QUALIFIER = "dataContainers"
+
+/**
+ * This is the main app definition that is used to initialize the FiFi framework.
+ */
+interface AppDefinition<Environment: ModelEnvironment, Api: ClientApi> {
+    /**
+     * The version of the app.
+     */
+    val appVersion: String
+
+    /**
+     * Whether the app is in debug mode or not.
+     */
+    val isDebugMode: Boolean
+
+    /**
+     * The factory that is used to create the environment.
+     */
+    val environmentFactory: ModelEnvironmentFactory<Environment>
+
+    /**
+     * The Koin app declaration that is used to declare additional modules.
+     */
+    fun appDeclaration(): KoinAppDeclaration = {}
+
+    /**
+     * The model that is used by the app. This is the "main" model of the app that provides access to data, repositories and apis.
+     */
+    fun model(appVersion: String): Model<Environment, Api>
+
+    /**
+     * The Koin module with app specific services and view models.
+     */
+    fun sharedAppModule(): Module
+
+    /**
+     * The data registrations that are used to register persistent data.
+     */
+    fun dataRegistrations(): PersistentDataRegistry.() -> Unit = {}
+
+    /**
+     * Additional injections that are used to inject platform specific services.
+     */
+    fun additionalInjections(module: Module) = Unit
+
+    /**
+     * The language provider that is used to localize the app.
+     */
+    fun languageProvider(): LanguageProvider = DefaultLanguageProvider(fallbackLanguageCode = "en")
 }
 
 /**
  * This initializes the FiFi framework and registers the app module with Koin.
  *
- * @param sharedAppModule The Koin module with app specific services and view models.
- * @param model The model that is used by the app. This is the "main" model of the app that provides access to data, repositories and apis.
- * @param languageProvider The language provider that is used to localize the app.
- * @param appDeclaration The Koin app declaration that is used to declare additional modules.
+ * @param appDefinition The app definition that is used to initialize the FiFi framework.
  */
-fun <ModelData, MockConfig, Environment: ModelEnvironment, Api: ClientApi> initKoinShared(
-    sharedAppModule: Module,
-    model: () -> Model<ModelData, MockConfig, Environment, Api>,
-    languageProvider: LanguageProvider = DefaultLanguageProvider(fallbackLanguageCode = "en"),
-    appDeclaration: KoinAppDeclaration = {},
-    additionalInjections: (Module) -> (Unit) = {}
-) =
-    initKoin(sharedAppModule, model, appDeclaration) {
-        additionalInjections(it)
-        it.single { languageProvider }
-        it.single {
-            val m: Model<ModelData, MockConfig, Environment, Api> = get()
-            ModelHelper<ModelData, Api>(m.apiFlow, m.modelData)
+fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
+    appDefinition: AppDefinition<Environment, Api>
+) = initKoin(
+    appDefinition.appVersion,
+    appDefinition.sharedAppModule(),
+    { appDefinition.model(it) },
+    appDefinition.appDeclaration()
+) {
+    appDefinition.additionalInjections(it)
+    it.single { appDefinition.languageProvider() }
+    it.single { appDefinition.environmentFactory }
+
+    val registry = object : PersistentDataRegistry {
+
+        val dataContainersQualifiers = mutableSetOf<Qualifier>()
+
+        private fun <T: Any> registerPersistentData(
+            qualifier: Qualifier,
+            serializer: KSerializer<T>,
+            initialData: T,
+            dataPreProcessors: List<DataProcessor<T>>
+        ) {
+            it.single(qualifier) {
+                val m: Model<Environment, Api> = get()
+                val dataContainer = m.registerPersistentData(qualifier.value, serializer, initialData, dataPreProcessors)
+                ModelHelper(qualifier.value, m.apiFlow, dataContainer)
+            }
+
+            dataContainersQualifiers.add(qualifier)
+        }
+
+        override fun <T: Any> registerPersistentData(
+            name: String,
+            serializer: KSerializer<T>,
+            initialData: T,
+            dataPreProcessors: List<DataProcessor<T>>
+        ) {
+            registerPersistentData(named(name), serializer, initialData, dataPreProcessors)
+        }
+
+        override fun <T: Any, E : Enum<E>> registerPersistentData(
+            name: E,
+            serializer: KSerializer<T>,
+            initialData: T,
+            dataPreProcessors: List<DataProcessor<T>>
+        ) {
+            registerPersistentData(name.qualifier, serializer, initialData, dataPreProcessors)
         }
     }
 
-fun <ModelData, MockConfig, Environment: ModelEnvironment, Api: ClientApi> sharedModule(model: () -> Model<ModelData, MockConfig, Environment, Api>, additionalInjections: (Module) -> (Unit)): Module {
+    registry.registerPersistentData(
+        name = LAUNCH_DATA_QUALIFIER,
+        serializer = LaunchData.serializer(),
+        initialData = LaunchData(currentAppVersion = appDefinition.appVersion),
+        dataPreProcessors = listOf(object: DataProcessor<LaunchData> {
+            override fun process(data: LaunchData): LaunchData {
+                return data.copy(
+                    isFirstLaunch = false,
+                    previousAppVersion = if (data.currentAppVersion == appDefinition.appVersion) data.previousAppVersion else data.currentAppVersion,
+                    currentAppVersion = appDefinition.appVersion
+                )
+            }
+        })
+    )
+
+    registry.apply(appDefinition.dataRegistrations())
+
+    it.single(named(DATA_CONTAINERS_QUALIFIER)) {
+        val dataContainers = mutableMapOf<String, CDataContainer<*>>()
+
+        registry.dataContainersQualifiers.forEach { qualifier ->
+            val modelHelper: ModelHelper<*, Api> = get(qualifier)
+            dataContainers[modelHelper.name] = modelHelper.modelDataContainer.wrap()
+        }
+
+        dataContainers
+    }
+}
+
+fun <Environment: ModelEnvironment, Api: ClientApi> sharedModule(
+    appVersion: String,
+    model: (String) -> Model<Environment, Api>,
+    additionalInjections: (Module) -> (Unit)
+): Module {
     return module {
         additionalInjections(this)
 
-        single { model() }
+        single { model(appVersion) }
     }
 }

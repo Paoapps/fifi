@@ -18,8 +18,13 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
+import kotlin.time.Duration
 
-class ModelHelper<ModelData, Api: ClientApi>(val apiFlow: StateFlow<Api>, val modelDataContainer: DataContainer<ModelData>) {
+class ModelHelper<ModelData: Any, Api: ClientApi>(
+    val name: String,
+    val apiFlow: StateFlow<Api>,
+    val modelDataContainer: DataContainer<ModelData>
+) {
 
     suspend fun api(): Api = apiFlow.first()
 
@@ -173,4 +178,39 @@ class ModelHelper<ModelData, Api: ClientApi>(val apiFlow: StateFlow<Api>, val mo
         }
         return response
     }
+
+    fun <T: Any> createBlockCache(
+        duration: Duration,
+        expire: Duration?,
+        selector: (ModelData) -> BlockedCacheData<T>?,
+        trigger: Flow<Any?> = flowOf(Unit),
+        isDebugEnabled: Boolean = false
+    ): BlockedCache<T> {
+        return createBlockCache(
+            dataContainer = modelDataContainer,
+            duration = duration,
+            expire = expire,
+            selector = selector,
+            name = name,
+            trigger = trigger,
+            isDebugEnabled = isDebugEnabled
+        )
+    }
+}
+
+fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.createBlockCache(
+    duration: Duration,
+    expire: Duration?,
+    trigger: Flow<Any?> = flowOf(Unit),
+    isDebugEnabled: Boolean = false
+): BlockedCache<T> {
+    return createBlockCache(
+        dataContainer = modelDataContainer,
+        duration = duration,
+        expire = expire,
+        selector = { it },
+        name = name,
+        trigger = trigger,
+        isDebugEnabled = isDebugEnabled
+    )
 }

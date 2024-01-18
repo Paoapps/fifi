@@ -41,7 +41,7 @@ The framework provides a way to define API's in Kotlin. These API's can be used 
 
 ### Authentication
 
-The framework provides a way to authenticate with a server using tokens. It provides a way to automatically refresh tokens when they expire. Authentication is optional and can be disabled if not needed.
+The framework provides a way to authenticate with a server using tokens. It provides a way to automatically refresh tokens when they expire. Authentication is optional and can be enabled by using the `fifi-auth` module.
 
 ## Installation
 
@@ -50,7 +50,7 @@ Set up a Kotlin Multiplatform Mobile (KMM) project as outlined [here](https://ko
 In your shared module, create a dependency to the `fifi-framework` library.
 
 ```kotlin
-implementation("com.paoapps.fifi:fifi-framework:0.0.11")
+implementation("com.paoapps.fifi:fifi-framework:0.0.12")
 ```
 
 ## Setup

@@ -3,7 +3,6 @@ package com.paoapps.fifi.sample.model
 import com.paoapps.fifi.model.Model
 import com.paoapps.fifi.model.ModelEnvironment
 import com.paoapps.fifi.sample.api.Api
-import com.paoapps.fifi.sample.domain.ModelData
 
 sealed class AppModelEnvironment(val environmentName: EnvironmentName, val configuration: Configuration):
     ModelEnvironment {
@@ -51,5 +50,5 @@ sealed class AppModelEnvironment(val environmentName: EnvironmentName, val confi
     }
 }
 
-interface AppModel: Model<ModelData, Unit, AppModelEnvironment, Api> {
+interface AppModel: Model<AppModelEnvironment, Api> {
 }
