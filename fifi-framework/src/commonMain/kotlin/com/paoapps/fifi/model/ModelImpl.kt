@@ -2,6 +2,7 @@ package com.paoapps.fifi.model
 
 import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.di.DATA_CONTAINERS_QUALIFIER
+import com.paoapps.fifi.di.LAUNCH_DATA_QUALIFIER
 import com.paoapps.fifi.domain.LaunchData
 import com.paoapps.fifi.model.datacontainer.CDataContainer
 import com.paoapps.fifi.model.datacontainer.DataContainer
@@ -10,7 +11,9 @@ import com.paoapps.fifi.model.datacontainer.DataProcessor
 import com.paoapps.fifi.model.datacontainer.wrap
 import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
@@ -29,10 +32,14 @@ abstract class ModelImpl<Environment: ModelEnvironment, Api: ClientApi>(
 
     final override val apiFlow: MutableStateFlow<Api> by lazy { MutableStateFlow(createApi(environment, appVersion)) }
 
-    override val dataContainers: MutableMap<String, CDataContainer<*>> by inject(named(DATA_CONTAINERS_QUALIFIER))
+    override val dataContainers: MutableMap<String, CDataContainer<*>> by inject(DATA_CONTAINERS_QUALIFIER)
 
     override val currentEnvironment: Environment
         get() = environmentStateFlow.value
+
+    private val launchDataModelHelper: ModelHelper<LaunchData, Api> by inject(LAUNCH_DATA_QUALIFIER)
+    override val launchDataFlow: Flow<LaunchData>
+        get() = launchDataModelHelper.modelDataContainer.dataFlow.filterNotNull()
 
     final override fun <T: Any> registerPersistentData(
         name: String,

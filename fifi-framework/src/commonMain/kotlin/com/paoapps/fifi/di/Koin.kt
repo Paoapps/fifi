@@ -22,15 +22,13 @@ import org.koin.dsl.module
 
 private fun <Environment: ModelEnvironment, Api: ClientApi> initKoin(
     appVersion: String,
-    sharedAppModule: Module,
+    modules: List<Module>,
     model: (String) -> Model<Environment, Api>,
     appDeclaration: KoinAppDeclaration = {},
-    additionalInjections: (Module) -> (Unit)
 ) = startKoin {
     appDeclaration()
     modules(
-        sharedModule(appVersion, model, additionalInjections),
-        sharedAppModule,
+        sharedModule(appVersion, model) + modules
     )
 }
 
@@ -51,8 +49,8 @@ interface PersistentDataRegistry {
     )
 }
 
-val LAUNCH_DATA_QUALIFIER = "launchData"
-internal val DATA_CONTAINERS_QUALIFIER = "dataContainers"
+val LAUNCH_DATA_QUALIFIER = named("launchData")
+internal val DATA_CONTAINERS_QUALIFIER = named("dataContainers")
 
 /**
  * This is the main app definition that is used to initialize the FiFi framework.
@@ -74,6 +72,11 @@ interface AppDefinition<Environment: ModelEnvironment, Api: ClientApi> {
     val environmentFactory: ModelEnvironmentFactory<Environment>
 
     /**
+     * The koin modules that are shared between the app and the model.
+     */
+    val modules: List<Module>
+
+    /**
      * The Koin app declaration that is used to declare additional modules.
      */
     fun appDeclaration(): KoinAppDeclaration = {}
@@ -84,19 +87,9 @@ interface AppDefinition<Environment: ModelEnvironment, Api: ClientApi> {
     fun model(appVersion: String): Model<Environment, Api>
 
     /**
-     * The Koin module with app specific services and view models.
-     */
-    fun sharedAppModule(): Module
-
-    /**
      * The data registrations that are used to register persistent data.
      */
     fun dataRegistrations(): PersistentDataRegistry.() -> Unit = {}
-
-    /**
-     * Additional injections that are used to inject platform specific services.
-     */
-    fun additionalInjections(module: Module) = Unit
 
     /**
      * The language provider that is used to localize the app.
@@ -113,89 +106,86 @@ fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
     appDefinition: AppDefinition<Environment, Api>
 ) = initKoin(
     appDefinition.appVersion,
-    appDefinition.sharedAppModule(),
+    module {
+
+        single { appDefinition.languageProvider() }
+        single { appDefinition.environmentFactory }
+
+        val registry = object : PersistentDataRegistry {
+
+            val dataContainersQualifiers = mutableSetOf<Qualifier>()
+
+            fun <T: Any> registerPersistentData(
+                qualifier: Qualifier,
+                serializer: KSerializer<T>,
+                initialData: T,
+                dataPreProcessors: List<DataProcessor<T>>
+            ) {
+                single(qualifier) {
+                    val m: Model<Environment, Api> = get()
+                    val dataContainer = m.registerPersistentData(qualifier.value, serializer, initialData, dataPreProcessors)
+                    ModelHelper(qualifier.value, m.apiFlow, dataContainer)
+                }
+
+                dataContainersQualifiers.add(qualifier)
+            }
+
+            override fun <T: Any> registerPersistentData(
+                name: String,
+                serializer: KSerializer<T>,
+                initialData: T,
+                dataPreProcessors: List<DataProcessor<T>>
+            ) {
+                registerPersistentData(named(name), serializer, initialData, dataPreProcessors)
+            }
+
+            override fun <T: Any, E : Enum<E>> registerPersistentData(
+                name: E,
+                serializer: KSerializer<T>,
+                initialData: T,
+                dataPreProcessors: List<DataProcessor<T>>
+            ) {
+                registerPersistentData(name.qualifier, serializer, initialData, dataPreProcessors)
+            }
+        }
+
+        registry.registerPersistentData(
+            qualifier = LAUNCH_DATA_QUALIFIER,
+            serializer = LaunchData.serializer(),
+            initialData = LaunchData(currentAppVersion = appDefinition.appVersion),
+            dataPreProcessors = listOf(object: DataProcessor<LaunchData> {
+                override fun process(data: LaunchData): LaunchData {
+                    return data.copy(
+                        isFirstLaunch = false,
+                        previousAppVersion = if (data.currentAppVersion == appDefinition.appVersion) data.previousAppVersion else data.currentAppVersion,
+                        currentAppVersion = appDefinition.appVersion
+                    )
+                }
+            })
+        )
+
+        registry.apply(appDefinition.dataRegistrations())
+
+        single(DATA_CONTAINERS_QUALIFIER) {
+            val dataContainers = mutableMapOf<String, CDataContainer<*>>()
+
+            registry.dataContainersQualifiers.forEach { qualifier ->
+                val modelHelper: ModelHelper<*, Api> = get(qualifier)
+                dataContainers[modelHelper.name] = modelHelper.modelDataContainer.wrap()
+            }
+
+            dataContainers
+        }
+    } + appDefinition.modules,
     { appDefinition.model(it) },
     appDefinition.appDeclaration()
-) {
-    appDefinition.additionalInjections(it)
-    it.single { appDefinition.languageProvider() }
-    it.single { appDefinition.environmentFactory }
-
-    val registry = object : PersistentDataRegistry {
-
-        val dataContainersQualifiers = mutableSetOf<Qualifier>()
-
-        private fun <T: Any> registerPersistentData(
-            qualifier: Qualifier,
-            serializer: KSerializer<T>,
-            initialData: T,
-            dataPreProcessors: List<DataProcessor<T>>
-        ) {
-            it.single(qualifier) {
-                val m: Model<Environment, Api> = get()
-                val dataContainer = m.registerPersistentData(qualifier.value, serializer, initialData, dataPreProcessors)
-                ModelHelper(qualifier.value, m.apiFlow, dataContainer)
-            }
-
-            dataContainersQualifiers.add(qualifier)
-        }
-
-        override fun <T: Any> registerPersistentData(
-            name: String,
-            serializer: KSerializer<T>,
-            initialData: T,
-            dataPreProcessors: List<DataProcessor<T>>
-        ) {
-            registerPersistentData(named(name), serializer, initialData, dataPreProcessors)
-        }
-
-        override fun <T: Any, E : Enum<E>> registerPersistentData(
-            name: E,
-            serializer: KSerializer<T>,
-            initialData: T,
-            dataPreProcessors: List<DataProcessor<T>>
-        ) {
-            registerPersistentData(name.qualifier, serializer, initialData, dataPreProcessors)
-        }
-    }
-
-    registry.registerPersistentData(
-        name = LAUNCH_DATA_QUALIFIER,
-        serializer = LaunchData.serializer(),
-        initialData = LaunchData(currentAppVersion = appDefinition.appVersion),
-        dataPreProcessors = listOf(object: DataProcessor<LaunchData> {
-            override fun process(data: LaunchData): LaunchData {
-                return data.copy(
-                    isFirstLaunch = false,
-                    previousAppVersion = if (data.currentAppVersion == appDefinition.appVersion) data.previousAppVersion else data.currentAppVersion,
-                    currentAppVersion = appDefinition.appVersion
-                )
-            }
-        })
-    )
-
-    registry.apply(appDefinition.dataRegistrations())
-
-    it.single(named(DATA_CONTAINERS_QUALIFIER)) {
-        val dataContainers = mutableMapOf<String, CDataContainer<*>>()
-
-        registry.dataContainersQualifiers.forEach { qualifier ->
-            val modelHelper: ModelHelper<*, Api> = get(qualifier)
-            dataContainers[modelHelper.name] = modelHelper.modelDataContainer.wrap()
-        }
-
-        dataContainers
-    }
-}
+)
 
 fun <Environment: ModelEnvironment, Api: ClientApi> sharedModule(
     appVersion: String,
     model: (String) -> Model<Environment, Api>,
-    additionalInjections: (Module) -> (Unit)
 ): Module {
     return module {
-        additionalInjections(this)
-
         single { model(appVersion) }
     }
 }

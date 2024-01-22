@@ -20,6 +20,21 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
 
+fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withApiBlockedCacheFlow(
+    debugName: String? = null,
+    blockedCache: BlockedCache<T>,
+    fetch: Fetch,
+    apiCall: suspend (api: Api, modelData: BlockedCacheData<T>) -> FetcherResult<T>,
+    predicate: (T, Instant) -> Boolean = { _, _ -> true },
+    condition: Flow<Boolean> = flowOf(true),
+): Flow<CacheResult<T>> = apiFlow.flatMapLatest { api ->
+    withBlockedCacheFlow(debugName, blockedCache, fetch, {
+        apiCall(api, it)
+    }, predicate, condition) { updatedData, _ ->
+        updatedData
+    }
+}
+
 class ModelHelper<ModelData: Any, Api: ClientApi>(
     val name: String,
     val apiFlow: StateFlow<Api>,

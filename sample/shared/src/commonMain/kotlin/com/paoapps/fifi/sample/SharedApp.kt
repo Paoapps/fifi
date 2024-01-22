@@ -25,10 +25,26 @@ enum class PersistentDataName {
     MODEL_DATA,
 }
 
+fun sharedAppModule() = module {
+    viewModel<HomeViewModel> { HomeViewModelImpl() }
+    viewModel<CoffeeDetailViewModel> { (id: Int) -> CoffeeDetailViewModelImpl(id) }
+}
+
+fun appModule() = module {
+    single { get<Model<AppModelEnvironment, Api>>() as AppModel }
+    single<CoffeeModel> { CoffeeModelImpl() }
+}
+
 data class SharedAppDefinition(
     override val appVersion: String,
     override val isDebugMode: Boolean
 ): AppDefinition<AppModelEnvironment, Api> {
+
+    override val modules: List<Module>
+        get() = listOf(
+            sharedAppModule(),
+            appModule(),
+        )
 
     override val environmentFactory: ModelEnvironmentFactory<AppModelEnvironment> = object : ModelEnvironmentFactory<AppModelEnvironment> {
         override val defaultEnvironment: AppModelEnvironment
@@ -40,12 +56,6 @@ data class SharedAppDefinition(
     }
 
     override fun model(appVersion: String): AppModel = AppModelImpl(appVersion, environmentFactory.defaultEnvironment)
-    override fun sharedAppModule(): Module {
-        return module {
-            viewModel<HomeViewModel> { HomeViewModelImpl() }
-            viewModel<CoffeeDetailViewModel> { (id: Int) -> CoffeeDetailViewModelImpl(id) }
-        }
-    }
 
     override fun dataRegistrations(): PersistentDataRegistry.() -> Unit {
         return {
@@ -54,16 +64,6 @@ data class SharedAppDefinition(
                 serializer = ModelData.serializer(),
                 initialData = ModelData(),
             )
-        }
-    }
-
-    override fun appDeclaration(): KoinAppDeclaration {
-        return {
-            modules(module {
-                single { get<Model<AppModelEnvironment, Api>>() as AppModel }
-
-                single<CoffeeModel> { CoffeeModelImpl() }
-            })
         }
     }
 }

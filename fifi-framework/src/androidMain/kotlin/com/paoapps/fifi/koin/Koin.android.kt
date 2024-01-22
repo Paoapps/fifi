@@ -23,6 +23,7 @@ import org.koin.core.component.inject
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
+import org.koin.dsl.module
 
 private const val APP_MODEL_JSON_KEY = "appModelJson"
 
@@ -104,10 +105,11 @@ fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
     appDeclaration: KoinAppDeclaration = {}
 ) {
     val androidAppDefinition = object: AppDefinition<Environment, Api> by appDefinition {
-        override fun additionalInjections(module: Module) {
-            module.single { AndroidApp<Environment, Api>(context) }
-            appDefinition.additionalInjections(module)
-        }
+
+        override val modules: List<Module>
+            get() = appDefinition.modules + module {
+                single { AndroidApp<Environment, Api>(context) }
+            }
 
         override fun appDeclaration(): KoinAppDeclaration {
             return {
