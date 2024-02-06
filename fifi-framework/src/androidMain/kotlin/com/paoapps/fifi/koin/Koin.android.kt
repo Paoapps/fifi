@@ -18,9 +18,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.core.KoinApplication
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.logger.Level
+import org.koin.core.logger.Logger
 import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
@@ -30,7 +32,7 @@ private const val APP_MODEL_JSON_KEY = "appModelJson"
 private const val PREFERENCES_NAME = "appPrefs"
 private const val ENVIRONMENT_KEY = "environment"
 
-private class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
+class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
     private val context: Context
 ): KoinComponent {
 
@@ -99,30 +101,30 @@ private class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
 
 }
 
-fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
+fun <Definition: AppDefinition<Environment, Api>, Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
     context: Context,
-    appDefinition: AppDefinition<Environment, Api>,
+    appDefinition: Definition,
+    initialization: (Definition, List<Module>, Logger?, KoinAppDeclaration) -> KoinApplication = { definition, modules, logger, appDeclaration -> initKoinApp(definition, modules, logger, appDeclaration) },
+    logger: Logger? = null,
     appDeclaration: KoinAppDeclaration = {}
-) {
-    val androidAppDefinition = object: AppDefinition<Environment, Api> by appDefinition {
-
-        override val modules: List<Module>
-            get() = appDefinition.modules + module {
+): KoinApplication {
+    val koin = initialization(
+        appDefinition,
+        listOf(
+            module {
                 single { AndroidApp<Environment, Api>(context) }
             }
-
-        override fun appDeclaration(): KoinAppDeclaration {
-            return {
-                androidContext(context)
-                this.apply(appDefinition.appDeclaration())
-                appDeclaration()
-            }
-        }
+        ),
+        logger
+    ) {
+        androidContext(context)
+        appDeclaration()
     }
-    val koin = initKoinApp(androidAppDefinition)
 
     if (appDefinition.isDebugMode) koin.androidLogger(Level.ERROR)
 
     val app: AndroidApp<Environment, Api> = koin.koin.get()
     app.setupAppModel()
+
+    return koin
 }

@@ -7,9 +7,9 @@ import com.paoapps.fifi.model.Model
 import com.paoapps.fifi.model.ModelEnvironment
 import kotlinx.coroutines.flow.Flow
 
-interface AuthModel<AccessTokenClaims: IdentifiableClaims<UserId>, Environment: ModelEnvironment, UserId> {
+interface AuthModel<AccessTokenClaims: IdentifiableClaims<UserId>, Environment: ModelEnvironment, UserId, Api: AuthClientApi<UserId, AccessTokenClaims>> {
 
-    val model: Model<Environment, AuthClientApi<UserId, AccessTokenClaims>>
+    val model: Model<Environment, Api>
 
     val userIdFlow: Flow<UserId?>
 

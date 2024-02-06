@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import org.koin.core.component.KoinComponent
 
-abstract class AuthModelImpl<AccessTokenClaims: IdentifiableClaims<UserId>, Environment: ModelEnvironment, Api: AuthClientApi<UserId, AccessTokenClaims>, UserId>(
-    model: Model<Environment, Api>
-): KoinComponent, AuthModel<AccessTokenClaims, Environment, UserId> {
+open class AuthModelImpl<AccessTokenClaims: IdentifiableClaims<UserId>, Environment: ModelEnvironment, Api: AuthClientApi<UserId, AccessTokenClaims>, UserId>(
+    override val model: Model<Environment, Api>
+): KoinComponent, AuthModel<AccessTokenClaims, Environment, UserId, Api> {
 
     override val userIdFlow: Flow<UserId?> by lazy { model.apiFlow.flatMapLatest { it.claimsFlow }.map { it?.id }.distinctUntilChanged() }
 

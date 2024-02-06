@@ -4,6 +4,7 @@ import com.paoapps.blockedcache.BlockedCache
 import com.paoapps.blockedcache.BlockedCacheData
 import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.auth.IdentifiableClaims
+import com.paoapps.fifi.auth.api.AuthClientApi
 import com.paoapps.fifi.model.ModelEnvironment
 import com.paoapps.fifi.model.ModelHelper
 import com.paoapps.fifi.model.datacontainer.DataContainer
@@ -11,8 +12,8 @@ import com.paoapps.fifi.model.createBlockCache
 import kotlinx.coroutines.flow.flowOf
 import kotlin.time.Duration
 
-fun <ModelData: Any, T: Any, AccessTokenClaims : IdentifiableClaims<UserId>, Environment : ModelEnvironment, UserId> createBlockCache(
-    authModel: AuthModel<AccessTokenClaims, Environment, UserId>,
+fun <ModelData: Any, T: Any, AccessTokenClaims : IdentifiableClaims<UserId>, Environment : ModelEnvironment, UserId, Api: AuthClientApi<UserId, AccessTokenClaims>> createBlockCache(
+    authModel: AuthModel<AccessTokenClaims, Environment, UserId, Api>,
     dataContainer: DataContainer<ModelData>,
     duration: Duration,
     expire: Duration?,
@@ -27,8 +28,8 @@ fun <ModelData: Any, T: Any, AccessTokenClaims : IdentifiableClaims<UserId>, Env
     return createBlockCache(dataContainer, duration, expire, selector, name, userIdChangedFlow, isDebugEnabled)
 }
 
-fun <T: Any, AccessTokenClaims : IdentifiableClaims<UserId>, Environment : ModelEnvironment, UserId, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.createBlockCache(
-    authModel: AuthModel<AccessTokenClaims, Environment, UserId>,
+fun <T: Any, AccessTokenClaims : IdentifiableClaims<UserId>, Environment : ModelEnvironment, UserId, Api: AuthClientApi<UserId, AccessTokenClaims>> ModelHelper<BlockedCacheData<T>, Api>.createBlockCache(
+    authModel: AuthModel<AccessTokenClaims, Environment, UserId, Api>,
     duration: Duration,
     expire: Duration?,
     triggerOnUserIdChange: Boolean = true,

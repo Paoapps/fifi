@@ -13,6 +13,8 @@ import com.paoapps.fifi.model.datacontainer.DataProcessor
 import com.paoapps.fifi.model.datacontainer.wrap
 import kotlinx.serialization.KSerializer
 import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
+import org.koin.core.logger.Logger
 import org.koin.core.module.Module
 import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.named
@@ -24,8 +26,10 @@ private fun <Environment: ModelEnvironment, Api: ClientApi> initKoin(
     appVersion: String,
     modules: List<Module>,
     model: (String) -> Model<Environment, Api>,
+    logger: Logger? = null,
     appDeclaration: KoinAppDeclaration = {},
 ) = startKoin {
+    logger?.let { logger(it) }
     appDeclaration()
     modules(
         sharedModule(appVersion, model) + modules
@@ -42,7 +46,7 @@ interface PersistentDataRegistry {
     )
 
     fun <T: Any, E : Enum<E>> registerPersistentData(
-        name: E,
+        enum: E,
         serializer: KSerializer<T>,
         initialData: T,
         dataPreProcessors: List<DataProcessor<T>> = emptyList(),
@@ -84,7 +88,7 @@ interface AppDefinition<Environment: ModelEnvironment, Api: ClientApi> {
     /**
      * The model that is used by the app. This is the "main" model of the app that provides access to data, repositories and apis.
      */
-    fun model(appVersion: String): Model<Environment, Api>
+    fun model(appVersion: String, environment: Environment): Model<Environment, Api>
 
     /**
      * The data registrations that are used to register persistent data.
@@ -103,10 +107,13 @@ interface AppDefinition<Environment: ModelEnvironment, Api: ClientApi> {
  * @param appDefinition The app definition that is used to initialize the FiFi framework.
  */
 fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
-    appDefinition: AppDefinition<Environment, Api>
+    appDefinition: AppDefinition<Environment, Api>,
+    additionalModules: List<Module> = emptyList(),
+    logger: Logger? = null,
+    appDeclaration: KoinAppDeclaration = {},
 ) = initKoin(
-    appDefinition.appVersion,
-    module {
+    appVersion = appDefinition.appVersion,
+    modules = module {
 
         single { appDefinition.languageProvider() }
         single { appDefinition.environmentFactory }
@@ -176,9 +183,13 @@ fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
 
             dataContainers
         }
-    } + appDefinition.modules,
-    { appDefinition.model(it) },
-    appDefinition.appDeclaration()
+    } + appDefinition.modules + additionalModules,
+    model = { appDefinition.model(it, appDefinition.environmentFactory.defaultEnvironment) },
+    logger = logger,
+    appDeclaration = {
+        this.apply(appDefinition.appDeclaration())
+        appDeclaration()
+    }
 )
 
 fun <Environment: ModelEnvironment, Api: ClientApi> sharedModule(

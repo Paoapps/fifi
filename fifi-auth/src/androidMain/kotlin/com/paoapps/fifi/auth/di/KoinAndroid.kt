@@ -3,10 +3,17 @@ package com.paoapps.fifi.auth.di
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.paoapps.fifi.auth.Claims
+import com.paoapps.fifi.auth.IdentifiableClaims
+import com.paoapps.fifi.auth.api.AuthClientApi
+import com.paoapps.fifi.model.ModelEnvironment
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
+import org.koin.core.KoinApplication
+import org.koin.core.logger.Logger
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
+import org.koin.dsl.KoinAppDeclaration
 import java.io.File
 
 internal actual fun platformInjections(serviceName: String, module: Module) {
@@ -46,4 +53,26 @@ private fun Context.clearSharedPreferences() {
             .clear().commit()
         File(dir, children[i]).delete()
     }
+}
+
+fun <Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaims<UserId>, RefreshTokenClaims: Claims, Api: AuthClientApi<UserId, AccessTokenClaims>> initKoinApp(
+    context: Context,
+    appDefinition: AuthAppDefinition<Environment, UserId, AccessTokenClaims, RefreshTokenClaims, Api>,
+    logger: Logger? = null,
+    appDeclaration: KoinAppDeclaration = {}
+): KoinApplication {
+    return com.paoapps.fifi.koin.initKoinApp(
+        context = context,
+        appDefinition = appDefinition,
+        initialization = { appDefinition, modules, logger, appDeclaration ->
+            initKoinApp(
+                appDefinition,
+                modules,
+                logger,
+                appDeclaration
+            )
+        },
+        logger = logger,
+        appDeclaration = appDeclaration
+    )
 }
