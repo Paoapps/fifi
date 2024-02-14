@@ -7,6 +7,7 @@ import com.paoapps.blockedcache.Fetch
 import com.paoapps.blockedcache.FetcherResult
 import com.paoapps.blockedcache.asCacheResult
 import com.paoapps.fifi.api.ClientApi
+import com.paoapps.fifi.di.API_STATE_FLOW_QUALIFIER
 import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.model.datacontainer.DataContainer
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import kotlin.time.Duration
 
 fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withApiBlockedCacheFlow(
@@ -37,10 +40,10 @@ fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withApiBlocke
 
 class ModelHelper<ModelData: Any, Api: ClientApi>(
     val name: String,
-    val apiFlow: StateFlow<Api>,
     val modelDataContainer: DataContainer<ModelData>
-) {
+): KoinComponent {
 
+    val apiFlow: StateFlow<Api> by inject(API_STATE_FLOW_QUALIFIER)
     suspend fun api(): Api = apiFlow.first()
 
     fun <R: Any> createApiCallFlow(

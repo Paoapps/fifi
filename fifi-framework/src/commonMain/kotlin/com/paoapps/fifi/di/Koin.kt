@@ -1,5 +1,6 @@
 package com.paoapps.fifi.di
 
+import com.paoapps.fifi.api.ApiFactory
 import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.domain.LaunchData
 import com.paoapps.fifi.localization.DefaultLanguageProvider
@@ -9,11 +10,14 @@ import com.paoapps.fifi.model.ModelEnvironment
 import com.paoapps.fifi.model.ModelEnvironmentFactory
 import com.paoapps.fifi.model.ModelHelper
 import com.paoapps.fifi.model.datacontainer.CDataContainer
+import com.paoapps.fifi.model.datacontainer.DataContainerImpl
 import com.paoapps.fifi.model.datacontainer.DataProcessor
 import com.paoapps.fifi.model.datacontainer.wrap
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.KSerializer
 import org.koin.core.context.startKoin
-import org.koin.core.logger.Level
 import org.koin.core.logger.Logger
 import org.koin.core.module.Module
 import org.koin.core.qualifier.Qualifier
@@ -23,16 +27,15 @@ import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 
 private fun <Environment: ModelEnvironment, Api: ClientApi> initKoin(
-    appVersion: String,
     modules: List<Module>,
-    model: (String) -> Model<Environment, Api>,
+    model: () -> Model<Environment, Api>,
     logger: Logger? = null,
     appDeclaration: KoinAppDeclaration = {},
 ) = startKoin {
     logger?.let { logger(it) }
     appDeclaration()
     modules(
-        sharedModule(appVersion, model) + modules
+        sharedModule(model) + modules
     )
 }
 
@@ -55,6 +58,8 @@ interface PersistentDataRegistry {
 
 val LAUNCH_DATA_QUALIFIER = named("launchData")
 internal val DATA_CONTAINERS_QUALIFIER = named("dataContainers")
+val API_FLOW_QUALIFIER = named("apiFlow")
+internal val API_STATE_FLOW_QUALIFIER = named("apiStateFlow")
 
 /**
  * This is the main app definition that is used to initialize the FiFi framework.
@@ -76,6 +81,12 @@ interface AppDefinition<Environment: ModelEnvironment, Api: ClientApi> {
     val environmentFactory: ModelEnvironmentFactory<Environment>
 
     /**
+     * The factory that is used to create the api.
+     * @param appVersion The version of the app. Could be used for a custom user agent header.
+     */
+    fun apiFactory(appVersion: String): ApiFactory<Api, Environment>
+
+    /**
      * The koin modules that are shared between the app and the model.
      */
     val modules: List<Module>
@@ -88,7 +99,7 @@ interface AppDefinition<Environment: ModelEnvironment, Api: ClientApi> {
     /**
      * The model that is used by the app. This is the "main" model of the app that provides access to data, repositories and apis.
      */
-    fun model(appVersion: String, environment: Environment): Model<Environment, Api>
+    fun model(): Model<Environment, Api>
 
     /**
      * The data registrations that are used to register persistent data.
@@ -112,11 +123,18 @@ fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
     logger: Logger? = null,
     appDeclaration: KoinAppDeclaration = {},
 ) = initKoin(
-    appVersion = appDefinition.appVersion,
     modules = module {
 
         single { appDefinition.languageProvider() }
         single { appDefinition.environmentFactory }
+        single { appDefinition.apiFactory(appDefinition.appVersion) }
+
+        single<StateFlow<Api>>(API_STATE_FLOW_QUALIFIER) {
+            val environmentFactory: ModelEnvironmentFactory<Environment> = get()
+            val apiFactory: ApiFactory<Api, Environment> = get()
+            MutableStateFlow(apiFactory.createApi(environmentFactory.defaultEnvironment))
+        }
+        single<Flow<Api>>(API_FLOW_QUALIFIER) { get<StateFlow<Api>>(API_STATE_FLOW_QUALIFIER) }
 
         val registry = object : PersistentDataRegistry {
 
@@ -129,9 +147,8 @@ fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
                 dataPreProcessors: List<DataProcessor<T>>
             ) {
                 single(qualifier) {
-                    val m: Model<Environment, Api> = get()
-                    val dataContainer = m.registerPersistentData(qualifier.value, serializer, initialData, dataPreProcessors)
-                    ModelHelper(qualifier.value, m.apiFlow, dataContainer)
+                    val dataContainer = DataContainerImpl(serializer, initialData, dataPreProcessors).wrap()
+                    ModelHelper<T, Api>(qualifier.value, dataContainer)
                 }
 
                 dataContainersQualifiers.add(qualifier)
@@ -184,19 +201,17 @@ fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
             dataContainers
         }
     } + appDefinition.modules + additionalModules,
-    model = { appDefinition.model(it, appDefinition.environmentFactory.defaultEnvironment) },
-    logger = logger,
-    appDeclaration = {
-        this.apply(appDefinition.appDeclaration())
-        appDeclaration()
-    }
-)
+    model = { appDefinition.model() },
+    logger = logger
+) {
+    this.apply(appDefinition.appDeclaration())
+    appDeclaration()
+}
 
 fun <Environment: ModelEnvironment, Api: ClientApi> sharedModule(
-    appVersion: String,
-    model: (String) -> Model<Environment, Api>,
+    model: () -> Model<Environment, Api>,
 ): Module {
     return module {
-        single { model(appVersion) }
+        single { model() }
     }
 }

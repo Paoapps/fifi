@@ -11,9 +11,6 @@ import kotlinx.serialization.KSerializer
 
 interface Model<Environment: ModelEnvironment, Api: ClientApi> {
 
-    val appVersion: String
-    val apiFlow: StateFlow<Api>
-
     val currentEnvironment: Environment
     val environmentFlow: FlowAdapter<Environment>
 
@@ -22,11 +19,4 @@ interface Model<Environment: ModelEnvironment, Api: ClientApi> {
     val launchDataFlow: Flow<LaunchData>
 
     fun updateEnvironment(environment: Environment)
-
-    fun <T: Any> registerPersistentData(
-        name: String,
-        serializer: KSerializer<T>,
-        initialData: T,
-        dataPreProcessors: List<DataProcessor<T>> = emptyList(),
-    ): CDataContainer<T>
 }

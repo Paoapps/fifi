@@ -10,6 +10,7 @@ import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -47,6 +48,18 @@ abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewMo
         val output: Output,
         val animate: Boolean = false
     )
+
+    private val _outputState = MutableStateFlow(null as Output?)
+    val outputState: StateFlow<Output?> by lazy {
+        if (output.flow is StateFlow<Output>) {
+            output.flow as StateFlow<Output>
+        } else {
+            viewModelScope.launch {
+                output.collect { _outputState.value = it }
+            }
+            _outputState
+        }
+    }
 
     abstract val output: FlowAdapter<Output>
     val animateFlow = MutableStateFlow(false)

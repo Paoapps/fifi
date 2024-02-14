@@ -49,16 +49,7 @@ open class ApiHelper(
     val environment: ModelEnvironment,
     private val appVersion: String,
     private val additionalHeaders: Map<String, String> = emptyMap(),
-    val client: HttpClient = HttpClient {
-        expectSuccess = true
-        install(Logging) {
-            logger = Logger.SIMPLE
-            level = LogLevel.ALL
-        }
-        install(ContentNegotiation) {
-            json(jsonParser)
-        }
-    }
+    val client: HttpClient,
 ): KoinComponent {
 
     private val languageProvider: LanguageProvider by inject()

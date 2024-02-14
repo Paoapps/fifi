@@ -2,11 +2,9 @@ package com.paoapps.fifi.sample.android.composeui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.paoapps.fifi.sample.android.composeui.home.HomeView
 
 
 @Composable
