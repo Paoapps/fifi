@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.18"
+version = "0.0.19"
 
 val ktorVersion = "2.1.3"
 val logbackVersion = "1.2.3"
@@ -60,6 +60,9 @@ kotlin {
 
                 //Coroutines
                 implementation(libs.kotlinx.coroutines.core)
+
+                implementation(libs.multiplatform.settings)
+                implementation(libs.multiplatform.settings.no.arg)
 
                 implementation(libs.blockedcache)
             }

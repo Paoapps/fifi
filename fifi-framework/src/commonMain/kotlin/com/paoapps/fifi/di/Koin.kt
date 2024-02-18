@@ -5,6 +5,7 @@ import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.domain.LaunchData
 import com.paoapps.fifi.localization.DefaultLanguageProvider
 import com.paoapps.fifi.localization.LanguageProvider
+import com.paoapps.fifi.model.EnvironmentSettings
 import com.paoapps.fifi.model.Model
 import com.paoapps.fifi.model.ModelEnvironment
 import com.paoapps.fifi.model.ModelEnvironmentFactory
@@ -126,13 +127,19 @@ fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
     modules = module {
 
         single { appDefinition.languageProvider() }
+        single { EnvironmentSettings() }
         single { appDefinition.environmentFactory }
         single { appDefinition.apiFactory(appDefinition.appVersion) }
 
         single<StateFlow<Api>>(API_STATE_FLOW_QUALIFIER) {
             val environmentFactory: ModelEnvironmentFactory<Environment> = get()
             val apiFactory: ApiFactory<Api, Environment> = get()
-            MutableStateFlow(apiFactory.createApi(environmentFactory.defaultEnvironment))
+            val settings: EnvironmentSettings = get()
+            MutableStateFlow(apiFactory.createApi(
+                settings.environmentName?.let {
+                    environmentFactory.fromName(it)
+                } ?: environmentFactory.defaultEnvironment)
+            )
         }
         single<Flow<Api>>(API_FLOW_QUALIFIER) { get<StateFlow<Api>>(API_STATE_FLOW_QUALIFIER) }
 

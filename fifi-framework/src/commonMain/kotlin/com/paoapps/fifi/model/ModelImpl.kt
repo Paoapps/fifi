@@ -27,7 +27,10 @@ abstract class ModelImpl<Environment: ModelEnvironment, Api: ClientApi>(
     private val apiFactory: ApiFactory<Api, Environment> by inject()
     private val apiFlow: StateFlow<Api> by inject<StateFlow<Api>>(API_STATE_FLOW_QUALIFIER)
 
-    protected val environmentStateFlow: MutableStateFlow<Environment> by lazy { MutableStateFlow(environmentFactory.defaultEnvironment) }
+    private val environmentSettings: EnvironmentSettings by inject()
+    protected val environmentStateFlow: MutableStateFlow<Environment> by lazy { MutableStateFlow(environmentSettings.environmentName?.let {
+        environmentFactory.fromName(it)
+    } ?: environmentFactory.defaultEnvironment) }
     override val environmentFlow: FlowAdapter<Environment> by lazy { environmentStateFlow.wrap(scope) }
 
     override val dataContainers: MutableMap<String, CDataContainer<*>> by inject(DATA_CONTAINERS_QUALIFIER)
@@ -49,5 +52,6 @@ abstract class ModelImpl<Environment: ModelEnvironment, Api: ClientApi>(
 
     override fun updateEnvironment(environment: Environment) {
         environmentStateFlow.value = environment
+        environmentSettings.setEnvironmentName(environment.name)
     }
 }

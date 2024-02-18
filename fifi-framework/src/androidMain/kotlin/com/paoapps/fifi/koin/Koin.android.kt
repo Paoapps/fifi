@@ -15,6 +15,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -30,7 +32,6 @@ import org.koin.dsl.module
 private const val APP_MODEL_JSON_KEY = "appModelJson"
 
 private const val PREFERENCES_NAME = "appPrefs"
-private const val ENVIRONMENT_KEY = "environment"
 
 class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
     private val context: Context
@@ -44,16 +45,21 @@ class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
     }
 
-    private val modelEnvironmentFactory: ModelEnvironmentFactory<Environment> by inject()
-
     fun setupAppModel() {
         model.dataContainers.forEach { (name, dataContainer) ->
-            dataContainer.initFromPreferences(name)
-        }
-        model.dataContainers.forEach { (name, dataContainer) ->
             MainScope().launch {
-                dataContainer.dataFlow.collect { data ->
-                    persistAppModelJobs[name]?.cancel()
+                model.environmentFlow.collect { environment ->
+                    dataContainer.initFromPreferences("${environment.name}-$name")
+                }
+            }
+        }
+        model.dataContainers.forEach { (dataName, dataContainer) ->
+            MainScope().launch {
+                combine(model.environmentFlow, dataContainer.dataFlow) { environment, data ->
+                    environment
+                }.collect { environment ->
+                    val name = "${environment.name}-$dataName"
+                    persistAppModelJobs[dataName]?.cancel()
                     persistAppModelJobs = persistAppModelJobs.plus(name to GlobalScope.launch {
                         delay(1000L)
                         dataContainer.persist(name)
@@ -61,12 +67,9 @@ class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
                 }
             }
         }
-
-        val environment = getEnvironment()
-        model.updateEnvironment(environment)
     }
 
-    fun CDataContainer<*>.initFromPreferences(name: String) {
+    private fun CDataContainer<*>.initFromPreferences(name: String) {
         val jsonString = appPreferences.getString("${name}_$APP_MODEL_JSON_KEY", "")
         updateJson(jsonString?.ifEmpty { null }, true)
     }
@@ -74,7 +77,7 @@ class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
     /**
      * Persists the appModel as json to preferences.
      */
-    fun CDataContainer<*>.persist(name: String) {
+    private fun CDataContainer<*>.persist(name: String) {
         appPreferences.edit()
             .putString("${name}_$APP_MODEL_JSON_KEY", json).apply()
     }
@@ -82,21 +85,6 @@ class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
     @SuppressLint("ApplySharedPref")
     fun removeAppModel(context: Context) {
         appPreferences.edit().remove(APP_MODEL_JSON_KEY).commit()
-    }
-
-    fun setEnvironment(environment: ModelEnvironment) {
-        appPreferences.edit(commit = true) {
-            putString(ENVIRONMENT_KEY, environment.name)
-        }
-    }
-
-    fun getEnvironment(): Environment {
-        val env = appPreferences.getString(ENVIRONMENT_KEY, modelEnvironmentFactory.defaultEnvironment.name)
-        try {
-            return modelEnvironmentFactory.fromName(env ?: modelEnvironmentFactory.defaultEnvironment.name)
-        } catch (i: Exception) {
-        }
-        return modelEnvironmentFactory.defaultEnvironment
     }
 
 }
