@@ -2,10 +2,10 @@ package com.paoapps.fifi.auth
 
 import com.paoapps.blockedcache.FetcherResult
 import com.paoapps.blockedcache.map
-import com.paoapps.fifi.api.ApiHelper
+import com.paoapps.fifi.api.ClientApiHelper
+import com.paoapps.fifi.api.withinTryCatch
 import com.paoapps.fifi.auth.domain.NotAuthenticatedException
 import com.paoapps.fifi.auth.domain.UserIdChangedException
-import com.paoapps.fifi.api.withinTryCatch
 import com.paoapps.fifi.domain.auth.Tokens
 import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.log.warn
@@ -27,7 +27,7 @@ interface TokenDecoder<UserId, AccessTokenClaims: IdentifiableClaims<UserId>, Re
 }
 
 open class AuthApiHelper<UserId, AccessTokenClaims: IdentifiableClaims<UserId>, RefreshTokenClaims: Claims>(
-    val apiHelper: ApiHelper,
+    val apiHelper: ClientApiHelper,
     val tokensFlow: MutableStateFlow<Tokens?>,
 ): KoinComponent {
     val tokenDecoder: TokenDecoder<UserId, AccessTokenClaims, RefreshTokenClaims> by inject()

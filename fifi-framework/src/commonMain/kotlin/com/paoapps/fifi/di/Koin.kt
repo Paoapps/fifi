@@ -14,6 +14,8 @@ import com.paoapps.fifi.model.datacontainer.CDataContainer
 import com.paoapps.fifi.model.datacontainer.DataContainerImpl
 import com.paoapps.fifi.model.datacontainer.DataProcessor
 import com.paoapps.fifi.model.datacontainer.wrap
+import com.paoapps.fifi.utils.settings
+import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -126,6 +128,7 @@ fun <Environment: ModelEnvironment, Api: ClientApi> initKoinApp(
 ) = initKoin(
     modules = module {
 
+        single<Settings> { settings(this) }
         single { appDefinition.languageProvider() }
         single { EnvironmentSettings() }
         single { appDefinition.environmentFactory }

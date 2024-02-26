@@ -27,5 +27,5 @@ open class ClientApiImpl<Environment: ModelEnvironment>(
     },
 ): KoinComponent, ClientApi {
 
-    protected val apiHelper = ApiHelper(environment, appVersion, additionalHeaders, httpClient)
+    protected val apiHelper = ClientApiHelper(httpClient, environment, appVersion, additionalHeaders)
 }

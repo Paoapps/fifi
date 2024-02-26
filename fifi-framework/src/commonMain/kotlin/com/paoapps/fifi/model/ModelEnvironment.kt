@@ -3,6 +3,8 @@ package com.paoapps.fifi.model
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.get
 import com.russhwolf.settings.set
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 interface ModelEnvironment {
     val name: String
@@ -17,8 +19,8 @@ interface ModelEnvironmentFactory<Environment: ModelEnvironment> {
     fun fromName(name: String): Environment
 }
 
-internal class EnvironmentSettings {
-    val settings = Settings()
+internal class EnvironmentSettings: KoinComponent {
+    val settings: Settings by inject()
 
     val environmentName: String?
         get() = settings["environment"]
