@@ -43,20 +43,23 @@ fun attributed(format: ((String, String) -> String), argument1: String, argument
     )
 }
 
+fun attributed(format: ((String, String, String) -> String), argument1: String, argument2: String, argument3: String, attributes: List<AttributedText.Attribute>, defaultAttributes: List<AttributedText.Attribute> = emptyList()): AttributedText =
+    attributed(format, argument1, argument2, argument3, listOf(attributes, attributes, attributes), defaultAttributes)
+
 @JvmName("attributedMulti3List")
-fun attributed(format: ((String, String, String) -> String), argument1: String, argument2: String, argument3: String, attributes: List<AttributedText.Attribute>): AttributedText {
+fun attributed(format: ((String, String, String) -> String), argument1: String, argument2: String, argument3: String, attributes: List<List<AttributedText.Attribute>>, defaultAttributes: List<AttributedText.Attribute> = emptyList()): AttributedText {
     val string = format(argument1, argument2, argument3)
     val argument1Index = string.indexOf(argument1)
     val argument2Index = string.indexOf(argument2)
     val argument3Index = string.indexOf(argument3)
     return AttributedText.Composition(listOf(
-        AttributedText.Text(string.substring(0, argument1Index)),
-        AttributedText.Text(argument1, attributes),
-        AttributedText.Text(string.substring(argument1Index + argument1.length, argument2Index)),
-        AttributedText.Text(argument2, attributes),
-        AttributedText.Text(string.substring(argument2Index + argument2.length, argument3Index)),
-        AttributedText.Text(argument3, attributes),
-        AttributedText.Text(string.substring(argument3Index + argument3.length))
+        AttributedText.Text(string.substring(0, argument1Index), defaultAttributes),
+        AttributedText.Text(argument1, attributes[0]),
+        AttributedText.Text(string.substring(argument1Index + argument1.length, argument2Index), defaultAttributes),
+        AttributedText.Text(argument2, attributes[1]),
+        AttributedText.Text(string.substring(argument2Index + argument2.length, argument3Index), defaultAttributes),
+        AttributedText.Text(argument3, attributes[2]),
+        AttributedText.Text(string.substring(argument3Index + argument3.length), defaultAttributes)
     ))
 }
 

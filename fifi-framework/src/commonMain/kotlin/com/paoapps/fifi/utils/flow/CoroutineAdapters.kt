@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 
 class FlowAdapter<T>(
-    internal val scope: CoroutineScope,
-    internal val flow: Flow<T>
+    val scope: CoroutineScope,
+    val flow: Flow<T>
 ): Flow<T> by flow {
     fun subscribe(
         onEach: (item: T) -> Unit,

@@ -64,12 +64,10 @@ suspend fun <T: Any> withinTryCatch(block: suspend () -> FetcherResult<T>): Fetc
     }
 }
 
-suspend fun <T: Any> HttpResponse.decodeFromString(deserializer: DeserializationStrategy<T>): FetcherResult.Data<T> =
-    FetcherResult.Data(
-        jsonParser.decodeFromString(
-            deserializer,
-            bodyAsText()
-        )
+suspend fun <T: Any> HttpResponse.decodeFromString(deserializer: DeserializationStrategy<T>): T =
+    jsonParser.decodeFromString(
+        deserializer,
+        bodyAsText()
     )
 
 fun HttpResponse.noData() = FetcherResult.Data(Unit)

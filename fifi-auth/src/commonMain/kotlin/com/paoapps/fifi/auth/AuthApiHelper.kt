@@ -1,9 +1,6 @@
 package com.paoapps.fifi.auth
 
-import com.paoapps.blockedcache.FetcherResult
-import com.paoapps.blockedcache.map
 import com.paoapps.fifi.api.ClientApiHelper
-import com.paoapps.fifi.api.withinTryCatch
 import com.paoapps.fifi.auth.domain.NotAuthenticatedException
 import com.paoapps.fifi.auth.domain.UserIdChangedException
 import com.paoapps.fifi.domain.auth.Tokens
@@ -39,9 +36,9 @@ open class AuthApiHelper<UserId, AccessTokenClaims: IdentifiableClaims<UserId>, 
         parametersOf(apiHelper.environment)
     }
 
-    suspend fun <T: Any> authenticated(debug: String? = null, optional: Boolean = false, block: suspend (String?, AccessTokenClaims?) -> FetcherResult<T>): FetcherResult<T> = authenticated(debug, 0, optional, requireLock = true, block)
+    suspend fun <T: Any> authenticated(debug: String? = null, optional: Boolean = false, block: suspend (String?, AccessTokenClaims?) -> T): T = authenticated(debug, 0, optional, requireLock = true, block)
 
-    suspend fun <T: Any> authenticated(debug: String? = null, recursiveCount: Int, optional: Boolean = false, requireLock: Boolean, block: suspend (String?, AccessTokenClaims?) -> FetcherResult<T>): FetcherResult<T> {
+    suspend fun <T: Any> authenticated(debug: String? = null, recursiveCount: Int, optional: Boolean = false, requireLock: Boolean, block: suspend (String?, AccessTokenClaims?) -> T): T {
         val debugPrefix = "($recursiveCount)" + (debug?.let { "$it: " } ?: "")
         debug("${debugPrefix}Start authenticated call")
         val tokens = tokensFlow.value
@@ -78,24 +75,33 @@ open class AuthApiHelper<UserId, AccessTokenClaims: IdentifiableClaims<UserId>, 
                         warn("${debugPrefix}Don't have refreshToken. Unable to refresh.")
                         tokenStore.deleteTokens(apiHelper.environment)
                         tokensFlow.value = null
-                        return FetcherResult.Error.Message(HttpStatusCode.NotFound.description)
+
+                        throw NotAuthenticatedException()
                     }
 
                     debug("${debugPrefix}Refresh tokens not expired, attempt to refresh tokens")
-                    val refreshResponse = refreshTokens(refreshToken)
+                    try {
+                        refreshTokens(refreshToken)
 
-                    if (requireLock) {
-                        refreshMutex.unlock()
-                    }
-                    debug("${debugPrefix}Lock unlocked")
+                        if (requireLock) {
+                            refreshMutex.unlock()
+                        }
+                        debug("${debugPrefix}Lock unlocked")
 
-                    if (refreshResponse is FetcherResult.Error) {
+                        debug("${debugPrefix}Access tokens refreshed")
+
+                        return authenticated(debug, recursiveCount + 1, optional, requireLock = true, block)
+                    } catch (e: Exception) {
                         debug("${debugPrefix}Refresh tokens failed")
-                        return refreshResponse.map()
-                    }
-                    debug("${debugPrefix}Access tokens refreshed")
+                        if (requireLock) {
+                            refreshMutex.unlock()
+                        }
+                        debug("${debugPrefix}Lock unlocked")
 
-                    return authenticated(debug, recursiveCount + 1, optional, requireLock = true, block)
+                        throw e
+                    }
+
+
                 } else {
                     debug("${debugPrefix}Waiting for lock")
                     // since the mutex was locked another thread is already refreshing
@@ -132,25 +138,20 @@ open class AuthApiHelper<UserId, AccessTokenClaims: IdentifiableClaims<UserId>, 
 
     }
 
-    private suspend fun refreshTokens(refreshToken: String) = withinTryCatch {
-        val response = authApi.refresh(refreshToken)
-        when(response) {
-            is FetcherResult.Data -> {
-                var tokens = response.value
-                if (tokens.refreshToken == null) {
-                    debug("Refresh token is null, use old refresh token: $refreshToken")
-                    tokens = tokens.copy(refreshToken = refreshToken)
-                }
-                saveTokens(tokens)
+    private suspend fun refreshTokens(refreshToken: String) =
+        try {
+            var tokens = authApi.refresh(refreshToken)
+            if (tokens.refreshToken == null) {
+                debug("Refresh token is null, use old refresh token: $refreshToken")
+                tokens = tokens.copy(refreshToken = refreshToken)
             }
-            is FetcherResult.Error -> {
-                if (AuthApiHelper.isPermanentError(response)) {
-                    deleteTokens()
-                }
+            saveTokens(tokens)
+        } catch (e: Exception) {
+            if (isPermanentError(e)) {
+                deleteTokens()
             }
+            throw e
         }
-        response
-    }
 
     fun saveTokens(tokens: Tokens) {
         tokenStore.saveTokens(tokens, apiHelper.environment)
@@ -163,9 +164,7 @@ open class AuthApiHelper<UserId, AccessTokenClaims: IdentifiableClaims<UserId>, 
     }
 
     companion object {
-        private fun isPermanentError(response: FetcherResult.Error) = when(response) {
-            is FetcherResult.Error.Exception -> (response.error as? ClientRequestException)?.response?.status == HttpStatusCode.Unauthorized
-            is FetcherResult.Error.Message -> false
-        }
+
+        private fun isPermanentError(exception: Exception) = (exception as? ClientRequestException)?.response?.status == HttpStatusCode.Unauthorized
     }
 }
