@@ -1,7 +1,6 @@
 package com.paoapps.fifi.utils
 
 import com.paoapps.fifi.ui.component.ConfirmationDialogDefinition
-import com.paoapps.fifi.ui.component.ToastDefinition
 import com.paoapps.fifi.utils.flow.FlowAdapter
 import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.CoroutineScope
@@ -14,9 +13,6 @@ interface Emitter<A, E> {
 }
 
 data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: suspend (E, Any?) -> EventResult<A, E>?) {
-
-    val notificationsFlow = MutableSharedFlow<ToastDefinition.Properties>()
-    val notifications = notificationsFlow.asSharedFlow().wrap(scope)
 
     val globalActionsFlow = MutableSharedFlow<Any>()
     val globalActions = globalActionsFlow.asSharedFlow().wrap(scope)
@@ -37,7 +33,6 @@ data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: s
         data class Action<A, E>(val action: A): EventResult<A, E>
 //        data class Link<A, E>(val link: String): EventResult<A, E>
         data class ConfirmationDialog<A, E>(val confirmationDialog: ConfirmationDialogDefinition.Properties<E>): EventResult<A, E>
-        data class Toast<A, E>(val properties: ToastDefinition.Properties): EventResult<A, E>
         data class Global<A, E>(val action: Any): EventResult<A, E>
     }
 
@@ -114,7 +109,6 @@ data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: s
             is EventResult.Event -> handleEvent(result.event, input)
 //            is EventResult.Link -> _links.emit(result.link)
             is EventResult.ConfirmationDialog -> _confirmationDialogs.emit(result.confirmationDialog)
-            is EventResult.Toast -> notificationsFlow.emit(result.properties)
             is EventResult.Global -> globalActionsFlow.emit(result.action)
             null -> {}
         }

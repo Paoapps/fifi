@@ -102,7 +102,7 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
             forceRefresh = fetch is Fetch.Force,
             forceRefreshDelay = (fetch as? Fetch.Force)?.minimumDelay,
             apiCall = apiCall,
-            predicate = predicate,
+            predicate = { data, time -> predicate(data, time) && if (fetch is Fetch.Cache) !fetch.ignoreExpiration else true },
             condition = condition.map { it && fetch !is Fetch.NoFetch },
             processData = processData
         )

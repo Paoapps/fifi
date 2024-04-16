@@ -33,7 +33,7 @@ quartz = "2.3.2"
 
 krypto = "4.0.2"
 
-blockedcache = "0.0.3"
+blockedcache = "0.0.5"
 
 [libraries]
 plugin-android = { module = "com.android.tools.build:gradle", version.ref = "plugin-android" }

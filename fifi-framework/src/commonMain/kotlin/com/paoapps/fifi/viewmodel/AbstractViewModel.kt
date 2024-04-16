@@ -2,7 +2,6 @@ package com.paoapps.fifi.viewmodel
 
 import com.paoapps.blockedcache.Fetch
 import com.paoapps.fifi.log.warn
-import com.paoapps.fifi.ui.component.ToastDefinition
 import com.paoapps.fifi.utils.ActionHandler
 import com.paoapps.fifi.utils.flow.FlowAdapter
 import com.paoapps.fifi.utils.flow.FlowRefreshTrigger
@@ -70,8 +69,6 @@ abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewMo
     }
     open val action: FlowAdapter<Action> = actionHandler.actions
 
-    protected val notificationsSharedFlow = MutableSharedFlow<ToastDefinition.Properties>()
-    val notifications = merge(notificationsSharedFlow.asSharedFlow(), actionHandler.notifications).wrap(viewModelScope)
     val notificationDismissEvent: Event? = null
 
     val confirmationDialogs = actionHandler.confirmationDialogs
@@ -102,7 +99,7 @@ abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewMo
         }.distinctUntilChanged()
     }
 
-    fun <R> createRefreshableFetchFlow(data: (refresh: Fetch) -> Flow<R>) = createRefreshableFetchFlow(default = Fetch.Cache, data = data)
+    fun <R> createRefreshableFetchFlow(data: (refresh: Fetch) -> Flow<R>) = createRefreshableFetchFlow(default = Fetch.Cache(), data = data)
 
     fun <R> createRefreshableFetchFlow(default: Fetch, data: (refresh: Fetch) -> Flow<R>): Flow<R> =
         createRefreshableFlow { data(if (it) Fetch.Force() else default) }
