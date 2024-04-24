@@ -9,12 +9,14 @@ import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import org.koin.core.component.KoinComponent
@@ -96,7 +98,10 @@ abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewMo
         return flowRefreshTrigger.flatMapLatest { trigger ->
             val refresh = trigger is FlowRefreshTrigger.Refresh
             data(refresh)
-        }.distinctUntilChanged()
+        }
+            .distinctUntilChanged()
+            // need to share because otherwise when failure, it can cause a continuous loop of requests
+            .shareIn(viewModelScope, started = SharingStarted.Lazily, replay = 1)
     }
 
     fun <R> createRefreshableFetchFlow(data: (refresh: Fetch) -> Flow<R>) = createRefreshableFetchFlow(default = Fetch.Cache(), data = data)
