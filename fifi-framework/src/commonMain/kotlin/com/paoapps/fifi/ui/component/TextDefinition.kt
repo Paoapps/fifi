@@ -12,12 +12,23 @@ object TextDefinition {
         val family: String? = null,
         val size: Int,
         val weight: Weight = Weight.REGULAR,
-        val lineHeight: Int = (size.toFloat() * 1.3).toInt(),
+        val lineHeight: Double = size.toFloat() * 1.3,
         val letterSpacing: Double = 0.0,
         val style: Style = Style.REGULAR,
         val decoration: TextDecoration = TextDecoration.NONE,
         val textStyle: TextStyle = TextStyle.BODY
     ) {
+        constructor(
+            family: String? = null,
+            size: Int,
+            weight: Weight = Weight.REGULAR,
+            lineHeight: Int,
+            letterSpacing: Double = 0.0,
+            style: Style = Style.REGULAR,
+            decoration: TextDecoration = TextDecoration.NONE,
+            textStyle: TextStyle = TextStyle.BODY
+        ) : this(family, size, weight, lineHeight.toDouble(), letterSpacing, style, decoration, textStyle)
+
         enum class Weight {
             REGULAR,
             MEDIUM,
