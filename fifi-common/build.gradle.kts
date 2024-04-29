@@ -6,10 +6,10 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.25"
+version = "0.0.26"
 
 kotlin {
-    android {
+    androidTarget {
         publishLibraryVariants("debug", "release")
     }
 
@@ -99,8 +99,8 @@ android {
         minSdk = 26
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     namespace = "com.paoapps.fifi.common"

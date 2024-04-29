@@ -6,19 +6,18 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.25"
+version = "0.0.26"
 
 val ktorVersion = "2.1.3"
 val logbackVersion = "1.2.3"
 val serializationVersion = "1.4.0"
 val coroutinesVersion = "1.6.4"
-val koinVersion = "3.4.3"
 val dateTimeVersion = "0.4.0"
 val kermitVersion = "1.0.0"
 val lifecycleVersion = "2.2.0"
 
 kotlin {
-    android {
+    androidTarget {
         publishLibraryVariants("debug", "release")
     }
 
@@ -77,7 +76,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-android:$ktorVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
                 implementation("com.google.android.material:material:1.2.1")
                 implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
                 implementation(libs.koin.android)
@@ -124,8 +123,8 @@ android {
         minSdk = 26
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     namespace = "com.paoapps.fifi.framework"
@@ -134,6 +133,6 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
 }
