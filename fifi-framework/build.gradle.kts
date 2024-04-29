@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.26"
+version = "0.0.27"
 
 val ktorVersion = "2.3.11"
 val logbackVersion = "1.2.3"
