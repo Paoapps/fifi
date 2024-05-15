@@ -31,7 +31,7 @@ fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withApiBlocke
     predicate: (T, Instant) -> Boolean = { _, _ -> true },
     condition: Flow<Boolean> = flowOf(true),
 ): Flow<CacheResult<T>> = apiFlow.flatMapLatest { api ->
-    withBlockedCacheFlow(debugName, blockedCache, fetch, {
+    withBlockedCacheFlow(debugName ?: name, blockedCache, fetch, {
         apiCall(api, it)
     }, predicate, condition) { updatedData, _ ->
         updatedData
