@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -106,16 +108,25 @@ android {
     namespace = "com.paoapps.fifi.common"
 }
 
+fun getExtraString(propertyName: String): String? {
+    val propertiesFile = rootProject.file("local.properties")
+    if (propertiesFile.exists()) {
+        val properties = Properties().apply { load(propertiesFile.inputStream()) }
+        return properties.getProperty(propertyName)
+    }
+    return null
+}
+
 publishing {
     // Configure maven central repository
     repositories {
         maven {
             name = "sonatype"
             setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-//            credentials {
-//                username = getExtraString("ossrhUsername")
-//                password = getExtraString("ossrhPassword")
-//            }
+            credentials {
+                username = getExtraString("ossrhUsername")
+                password = getExtraString("ossrhPassword")
+            }
         }
     }
 //
