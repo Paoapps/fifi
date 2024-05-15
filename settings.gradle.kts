@@ -8,7 +8,7 @@ pluginManagement {
 
 rootProject.name = "FiFi"
 
-includeBuild("convention-plugins")
+//includeBuild("convention-plugins")
 
 include(":fifi-common")
 include(":fifi-auth")

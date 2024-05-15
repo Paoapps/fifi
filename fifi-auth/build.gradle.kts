@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     kotlin("plugin.serialization")
-    id("convention.publication")
+    id("maven-publish")
 }
 
 group = "com.paoapps.fifi"
@@ -106,4 +106,48 @@ android {
     }
 
     namespace = "com.paoapps.fifi.auth"
+}
+
+publishing {
+    // Configure maven central repository
+    repositories {
+        maven {
+            name = "sonatype"
+            setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+//            credentials {
+//                username = getExtraString("ossrhUsername")
+//                password = getExtraString("ossrhPassword")
+//            }
+        }
+    }
+//
+//    // Configure all publications
+//    publications.withType<MavenPublication> {
+//        // Stub javadoc.jar artifact
+//        artifact(javadocJar.get())
+//
+//        // Provide artifacts information requited by Maven Central
+//        pom {
+//            name.set("FiFi")
+//            description.set("Kotlin Multiplatform Mobile framework for optimal code sharing between iOS and Android.")
+//            url.set("https://github.com/lammertw/fifi")
+//
+//            licenses {
+//                license {
+//                    name.set("MIT")
+//                    url.set("https://opensource.org/licenses/MIT")
+//                }
+//            }
+//            developers {
+//                developer {
+//                    id.set("https://github.com/lammertw")
+//                    name.set("Lammert Westerhoff")
+//                    email.set("lammert@paoapps.com")
+//                }
+//            }
+//            scm {
+//                url.set("https://github.com/lammertw/fifi")
+//            }
+//        }
+//    }
 }
