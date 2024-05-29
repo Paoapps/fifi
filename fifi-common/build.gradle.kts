@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.26"
+version = "0.0.26-SNAPSHOT"
 
 kotlin {
     androidTarget {
@@ -15,7 +15,7 @@ kotlin {
 
     jvm {
         compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
+            kotlinOptions.jvmTarget = "17"
         }
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
