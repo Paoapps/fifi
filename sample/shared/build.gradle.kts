@@ -29,7 +29,7 @@ kotlin {
     }
 
     sourceSets {
-        val ktorVersion = "2.3.3"
+        val ktorVersion = "2.3.11"
         val coroutinesVersion = "1.7.3"
         val serializationVersion = "1.5.1"
 

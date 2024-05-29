@@ -6,11 +6,11 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.26-SNAPSHOT"
+version = "0.0.26"
 
-val ktorVersion = "2.1.3"
+val ktorVersion = "2.3.11"
 val logbackVersion = "1.2.3"
-val serializationVersion = "1.4.0"
+val serializationVersion = "1.5.1"
 val coroutinesVersion = "1.6.4"
 val dateTimeVersion = "0.4.0"
 val kermitVersion = "1.0.0"
@@ -77,7 +77,6 @@ kotlin {
             dependencies {
                 implementation("io.ktor:ktor-client-android:$ktorVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-                implementation("com.google.android.material:material:1.2.1")
                 implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
                 implementation(libs.koin.android)
 
