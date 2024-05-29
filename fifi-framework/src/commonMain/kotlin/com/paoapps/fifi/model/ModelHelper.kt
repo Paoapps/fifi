@@ -120,7 +120,6 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
         withModelDataFlow(
             debugName = debugName,
             apiCall = { modelData, updateData ->
-                debugName?.let { debug("🔵 api call of $it") }
                 blockedCache.getData(
                     forceRefresh = forceRefresh,
                     forceRefreshDelay = forceRefreshDelay,
