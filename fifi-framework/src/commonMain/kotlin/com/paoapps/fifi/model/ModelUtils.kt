@@ -30,7 +30,8 @@ fun <ModelData: Any, T: Any> createBlockCache(
     selector: (ModelData) -> BlockedCacheData<T>?,
     name: String,
     trigger: Flow<Any?> = flowOf(Unit),
-    isDebugEnabled: Boolean = false
+    triggerOnAppBecomeActive: Boolean = true,
+    isDebugEnabled: Boolean = false,
 ): BlockedCache<T> {
 
     val dataFlow = dataContainer.dataFlow.map {
@@ -43,7 +44,11 @@ fun <ModelData: Any, T: Any> createBlockCache(
     return BlockedCache(
         duration.inWholeMilliseconds,
         expire?.inWholeMilliseconds,
-        combine(AppBecameActiveFlow, trigger) { _, _ -> },
+        if (triggerOnAppBecomeActive) {
+            combine(AppBecameActiveFlow, trigger) { _, _ -> }
+        } else {
+            trigger.map {  }
+        },
         dataFlow,
         name = name,
         isDebugEnabled = isDebugEnabled
