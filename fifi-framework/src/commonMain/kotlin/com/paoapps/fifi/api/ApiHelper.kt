@@ -14,7 +14,7 @@ import kotlin.collections.set
 expect fun getUserAgentHeader(appVersion: String): String
 
 expect class OSConfigurationFactory() {
-    fun defaultConfiguration(): OSConfiguration
+    fun defaultConfiguration(port: String = "8081"): OSConfiguration
 }
 
 data class OSConfiguration(
