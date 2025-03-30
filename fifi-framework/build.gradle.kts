@@ -9,11 +9,6 @@ group = "com.paoapps.fifi"
 version = "0.0.31"
 
 val ktorVersion = "2.3.11"
-val logbackVersion = "1.2.3"
-val serializationVersion = "1.5.1"
-val coroutinesVersion = "1.6.4"
-val dateTimeVersion = "0.4.0"
-val kermitVersion = "1.0.0"
 val lifecycleVersion = "2.2.0"
 
 kotlin {

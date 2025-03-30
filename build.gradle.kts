@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
 
-    val kotlinVersion = "1.9.23"
+    val kotlinVersion = "2.1.0"
 
     dependencies {
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.5.3")

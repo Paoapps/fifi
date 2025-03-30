@@ -7,7 +7,7 @@ plugins {
 val koinVersion = "3.4.3"
 
 kotlin {
-    android()
+    androidTarget()
 
     listOf(
         iosX64(),
@@ -17,12 +17,6 @@ kotlin {
         it.binaries.framework {
             baseName = "shared"
             export(project(":fifi-framework"))
-
-            // workaround: https://youtrack.jetbrains.com/issue/KT-60230#focus=Comments-27-7921542.0-0
-            // will be fixed in Kotlin 1.9.10
-            if (System.getenv("XCODE_VERSION_MAJOR") == "1500") {
-                linkerOpts += "-ld64"
-            }
 
             transitiveExport = true
         }
