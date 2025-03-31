@@ -115,11 +115,6 @@ android {
     }
     namespace = "com.paoapps.fifi.sample.shared"
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
     sourceSets {
         named("main") {
             res.srcDirs("build/src/androidMain/res")

@@ -14,9 +14,6 @@ kotlin {
     }
 
     jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "17"
-        }
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
         }
@@ -99,8 +96,8 @@ android {
         minSdk = 26
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     namespace = "com.paoapps.fifi.common"

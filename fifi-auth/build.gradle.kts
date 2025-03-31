@@ -14,9 +14,6 @@ kotlin {
     }
 
     jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "17"
-        }
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
         }
@@ -108,10 +105,6 @@ android {
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 26
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 
     namespace = "com.paoapps.fifi.auth"
