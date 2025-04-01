@@ -9,7 +9,16 @@ group = "com.paoapps.fifi"
 version = "0.0.32"
 
 kotlin {
+    jvmToolchain(17)
+
     androidTarget {
+
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+
         publishLibraryVariants("debug", "release")
     }
 
@@ -105,6 +114,10 @@ android {
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 26
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     namespace = "com.paoapps.fifi.auth"

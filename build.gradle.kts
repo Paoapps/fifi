@@ -11,7 +11,7 @@ buildscript {
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.5.3")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
-        classpath("com.android.tools.build:gradle:7.4.2")
+        classpath(libs.plugin.android)
         classpath("com.google.android.gms:oss-licenses-plugin:0.10.6")
     }
 }
@@ -27,3 +27,8 @@ allprojects {
 tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
 }
+
+//plugins {
+////    alias(libs.plugins.jetbrainsCompose) apply false
+//    alias(libs.plugins.compose.compiler) apply false
+//}

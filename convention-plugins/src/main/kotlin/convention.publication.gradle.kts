@@ -36,6 +36,15 @@ if (secretPropsFile.exists()) {
 
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
+    // Add some placeholder content to avoid empty JAR issues
+    from(file("${layout.buildDirectory}/javadoc")) {
+        // Ensure the directory exists
+        doFirst {
+            file("${layout.buildDirectory}/javadoc").mkdirs()
+            // Create a placeholder file
+            file("${layout.buildDirectory}/javadoc/placeholder.txt").writeText("This is a placeholder for javadoc")
+        }
+    }
 }
 
 fun getExtraString(name: String) = ext[name]?.toString()

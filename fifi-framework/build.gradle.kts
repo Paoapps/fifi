@@ -3,6 +3,7 @@ plugins {
     id("com.android.library")
     kotlin("plugin.serialization")
     id("convention.publication")
+//    alias(libs.plugins.compose.compiler)
 }
 
 group = "com.paoapps.fifi"
@@ -12,7 +13,14 @@ val ktorVersion = "2.3.11"
 val lifecycleVersion = "2.2.0"
 
 kotlin {
+    jvmToolchain(17)
+
     androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
         publishLibraryVariants("debug", "release")
     }
     
@@ -71,9 +79,10 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
                 implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
                 implementation(libs.koin.android)
+//                implementation("androidx.compose.runtime:runtime")
 
                 implementation(libs.bundles.android)
-                implementation(libs.bundles.android.ui)
+//                implementation(libs.bundles.android.ui)
             }
 
             kotlin.srcDirs(project.projectDir.resolve("build/src/androidMain/kotlin"))
@@ -114,12 +123,14 @@ android {
         minSdk = 26
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
     namespace = "com.paoapps.fifi.framework"
 
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
+//    buildFeatures {
+//        compose = true
+//    }
 }
