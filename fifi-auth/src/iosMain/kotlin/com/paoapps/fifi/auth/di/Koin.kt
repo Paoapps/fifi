@@ -1,5 +1,6 @@
 package com.paoapps.fifi.auth.di
 
+import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.ExperimentalSettingsImplementation
 import com.russhwolf.settings.KeychainSettings
 import com.russhwolf.settings.NSUserDefaultsSettings
@@ -11,10 +12,9 @@ import platform.Foundation.CFBridgingRetain
 import platform.Security.kSecAttrAccessible
 import platform.Security.kSecAttrAccessibleAfterFirstUnlock
 import platform.Security.kSecAttrAccessibleWhenUnlocked
-import platform.Security.kSecAttrAccessibleWhenUnlockedThisDeviceOnly
 import platform.Security.kSecAttrService
 
-@OptIn(ExperimentalSettingsImplementation::class, ExperimentalForeignApi::class)
+@OptIn(ExperimentalSettingsImplementation::class, ExperimentalForeignApi::class, ExperimentalSettingsApi::class)
 internal actual fun platformInjections(serviceName: String, module: Module) {
     module.single<Settings>(named(PlatformModuleQualifier.ENCRYPTED_SETTINGS)) {
         KeychainSettings(Pair(kSecAttrAccessible, kSecAttrAccessibleWhenUnlocked)).clear()
