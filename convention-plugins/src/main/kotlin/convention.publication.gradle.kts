@@ -84,6 +84,10 @@ publishing {
     }
 }
 
+tasks.withType<AbstractPublishToMaven>().configureEach {
+    mustRunAfter(tasks.withType<Sign>())
+}
+
 // Signing artifacts. Signing.* extra properties values will be used
 signing {
     sign(publishing.publications)
