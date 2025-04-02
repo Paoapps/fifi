@@ -12,13 +12,6 @@ kotlin {
     jvmToolchain(17)
 
     androidTarget {
-
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-
         publishLibraryVariants("debug", "release")
     }
 
@@ -27,6 +20,10 @@ kotlin {
             useJUnitPlatform()
         }
     }
+
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     listOf(
         iosX64(),
@@ -80,30 +77,8 @@ kotlin {
                 implementation(libs.androidx.security.crypto)
             }
         }
-//        val androidTest by getting {
-//            dependencies {
-//                implementation(kotlin("test-junit"))
-//                implementation("junit:junit:4.13.2")
-//            }
-//        }
 
-//        val jvmMain by getting {
-//            kotlin.srcDirs(project.projectDir.resolve("build/src/jvmMain/kotlin"))
-//        }
-
-//        val jsMain by getting {
-//            kotlin.srcDirs(project.projectDir.resolve("build/src/jsMain/kotlin"))
-//        }
-
-        val iosX64Main by getting
-        val iosArm64Main by getting
-        val iosSimulatorArm64Main by getting
         val iosMain by creating {
-            dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
-
             kotlin.srcDirs(project.projectDir.resolve("build/src/iosMain/kotlin"))
         }
     }

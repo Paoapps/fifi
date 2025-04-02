@@ -27,8 +27,3 @@ allprojects {
 tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
 }
-
-//plugins {
-////    alias(libs.plugins.jetbrainsCompose) apply false
-//    alias(libs.plugins.compose.compiler) apply false
-//}
