@@ -99,5 +99,22 @@ tasks.withType<AbstractPublishToMaven>().configureEach {
 
 // Signing artifacts. Signing.* extra properties values will be used
 signing {
-    sign(publishing.publications)
+    val signingKeyId = findProperty("signing.keyId") as String?
+    val signingKey = findProperty("signing.key") as String?
+    val signingPassword = findProperty("signing.password") as String?
+    val secretKeyRingFile = findProperty("signing.secretKeyRingFile") as String?
+
+    if (signingKeyId != null && signingPassword != null) {
+        if (secretKeyRingFile != null) {
+            useInMemoryPgpKeys(
+                file(secretKeyRingFile).readText(),
+                signingPassword
+            )
+        } else {
+            useGpgCmd()
+        }
+        sign(publishing.publications)
+    } else {
+        logger.warn("Signing credentials not found, skipping signing")
+    }
 }
