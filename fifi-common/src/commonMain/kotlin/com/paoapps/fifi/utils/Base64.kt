@@ -116,8 +116,7 @@ object Base64 {
      */
     class Encoder internal constructor(private val newline: ByteArray?, private val linemax: Int, private val doPadding: Boolean) {
         private fun outLength(srclen: Int): Int {
-            var len = 0
-            len = if (doPadding) {
+            var len: Int = if (doPadding) {
                 4 * ((srclen + 2) / 3)
             } else {
                 val n = srclen % 3
@@ -141,7 +140,7 @@ object Base64 {
         fun encode(src: ByteArray): ByteArray {
             val len = outLength(src.size) // dst array size
             val dst = ByteArray(len)
-            val ret = encode0(src, 0, src.size, dst)
+            val ret = encode0(src, src.size, dst)
             return if (ret != dst.size) dst.copyOf(ret) else dst
         }
 
@@ -152,14 +151,15 @@ object Base64 {
                 val bits: Int = src[sp0++].toInt() and 0xff shl 16 or (
                         src[sp0++].toInt() and 0xff shl 8) or
                         (src[sp0++].toInt() and 0xff)
-                dst[dp0++] = toBase64[bits ushr 18 and 0x3f].toByte()
-                dst[dp0++] = toBase64[bits ushr 12 and 0x3f].toByte()
-                dst[dp0++] = toBase64[bits ushr 6 and 0x3f].toByte()
-                dst[dp0++] = toBase64[bits and 0x3f].toByte()
+                dst[dp0++] = toBase64[bits ushr 18 and 0x3f].code.toByte()
+                dst[dp0++] = toBase64[bits ushr 12 and 0x3f].code.toByte()
+                dst[dp0++] = toBase64[bits ushr 6 and 0x3f].code.toByte()
+                dst[dp0++] = toBase64[bits and 0x3f].code.toByte()
             }
         }
 
-        private fun encode0(src: ByteArray, off: Int, end: Int, dst: ByteArray): Int {
+        private fun encode0(src: ByteArray, end: Int, dst: ByteArray): Int {
+            val off = 0
             val base64 = toBase64
             var sp = off
             var slen = (end - off) / 3 * 3
@@ -180,19 +180,19 @@ object Base64 {
             }
             if (sp < end) {               // 1 or 2 leftover bytes
                 val b0: Int = src[sp++].toInt() and 0xff
-                dst[dp++] = base64[b0 shr 2].toByte()
+                dst[dp++] = base64[b0 shr 2].code.toByte()
                 if (sp == end) {
-                    dst[dp++] = base64[b0 shl 4 and 0x3f].toByte()
+                    dst[dp++] = base64[b0 shl 4 and 0x3f].code.toByte()
                     if (doPadding) {
-                        dst[dp++] = '='.toByte()
-                        dst[dp++] = '='.toByte()
+                        dst[dp++] = '='.code.toByte()
+                        dst[dp++] = '='.code.toByte()
                     }
                 } else {
                     val b1: Int = src[sp++].toInt() and 0xff
-                    dst[dp++] = base64[b0 shl 4 and 0x3f or (b1 shr 4)].toByte()
-                    dst[dp++] = base64[b1 shl 2 and 0x3f].toByte()
+                    dst[dp++] = base64[b0 shl 4 and 0x3f or (b1 shr 4)].code.toByte()
+                    dst[dp++] = base64[b1 shl 2 and 0x3f].code.toByte()
                     if (doPadding) {
-                        dst[dp++] = '='.toByte()
+                        dst[dp++] = '='.code.toByte()
                     }
                 }
             }
@@ -261,7 +261,7 @@ object Base64 {
     class Decoder {
         companion object {
             /**
-             * Lookup table for decoding unicode characters drawn from the
+             * Lookup table for decoding Unicode characters drawn from the
              * "Base64 Alphabet" (as specified in Table 1 of RFC 2045) into
              * their 6-bit positive integer equivalents.  Characters that
              * are not in the Base64 alphabet but fall within the bounds of
@@ -278,14 +278,14 @@ object Base64 {
 
             init {
                 fromBase64.fill(-1)
-                for (i in Encoder.toBase64.indices) fromBase64[Encoder.toBase64[i].toInt()] = i
-                fromBase64['='.toInt()] = -2
+                for (i in Encoder.toBase64.indices) fromBase64[Encoder.toBase64[i].code] = i
+                fromBase64['='.code] = -2
             }
 
             init {
                 fromBase64URL.fill(-1)
-                for (i in Encoder.toBase64URL.indices) fromBase64URL[Encoder.toBase64URL[i].toInt()] = i
-                fromBase64URL['='.toInt()] = -2
+                for (i in Encoder.toBase64URL.indices) fromBase64URL[Encoder.toBase64URL[i].code] = i
+                fromBase64URL['='.code] = -2
             }
         }
 
@@ -304,8 +304,8 @@ object Base64 {
          * if `src` is not in valid Base64 scheme
          */
         fun decode(src: ByteArray): ByteArray {
-            var dst = ByteArray(outLength(src, 0, src.size))
-            val ret = decode0(src, 0, src.size, dst)
+            var dst = ByteArray(outLength(src, src.size))
+            val ret = decode0(src, src.size, dst)
             if (ret != dst.size) {
                 dst = dst.copyOf(ret)
             }
@@ -313,26 +313,26 @@ object Base64 {
         }
 
 
-        private fun outLength(src: ByteArray, sp: Int, sl: Int): Int {
-            var sp = sp
+        private fun outLength(src: ByteArray, sl: Int): Int {
+            val sp = 0
             var paddings = 0
-            var len = sl - sp
+            val len = sl - sp
             if (len == 0) return 0
             if (len < 2) {
                 throw IllegalArgumentException(
                     "Input byte[] should at least have 2 bytes for base64 bytes"
                 )
             }
-            if (src[sl - 1].toChar() == '=') {
+            if (src[sl - 1].toInt().toChar() == '=') {
                 paddings++
-                if (src[sl - 2].toChar() == '=') paddings++
+                if (src[sl - 2].toInt().toChar() == '=') paddings++
             }
             if (paddings == 0 && len and 0x3 != 0) paddings = 4 - (len and 0x3)
             return 3 * ((len + 3) / 4) - paddings
         }
 
-        private fun decode0(src: ByteArray, sp: Int, sl: Int, dst: ByteArray): Int {
-            var sp = sp
+        private fun decode0(src: ByteArray, sl: Int, dst: ByteArray): Int {
+            var sp = 0
             val base64 = if (false) fromBase64URL else fromBase64
             var dp = 0
             var bits = 0
@@ -365,7 +365,7 @@ object Base64 {
                         // xx=   shiftto==6&&sp==sl missing last =
                         // xx=y  shiftto==6 last is not =
                         require(
-                            !(shiftto == 6 && (sp == sl || src[sp++].toChar() != '=') ||
+                            !(shiftto == 6 && (sp == sl || src[sp++].toInt().toChar() != '=') ||
                                     shiftto == 18)
                         ) { "Input byte array has wrong 4-byte ending unit" }
                         break

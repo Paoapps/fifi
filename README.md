@@ -15,7 +15,7 @@ We encourage you to try out FiFi and provide feedback. If you have any questions
 * **Highly Compatible with Modern UI**: Tailored to work efficiently with SwiftUI and Compose.
 
 ## Prerequisites
-* Kotlin version 1.9.23
+* Kotlin version 2.1.0
 * Familiarity with Kotlin Multiplatform Mobile setup [KMM Getting Started](https://kotlinlang.org/docs/multiplatform-mobile-getting-started.html)
 * Strong recommendation to use SwiftUI for iOS and Compose for Android.
 
@@ -50,7 +50,7 @@ Set up a Kotlin Multiplatform Mobile (KMM) project as outlined [here](https://ko
 In your shared module, create a dependency to the `fifi-framework` library.
 
 ```kotlin
-implementation("com.paoapps.fifi:fifi-framework:0.0.31")
+implementation("com.paoapps.fifi:fifi-framework:0.0.32")
 ```
 
 ## Setup

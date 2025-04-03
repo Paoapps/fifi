@@ -6,21 +6,24 @@ plugins {
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.31"
+version = "0.0.32"
 
 kotlin {
+    jvmToolchain(17)
+
     androidTarget {
         publishLibraryVariants("debug", "release")
     }
 
     jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "17"
-        }
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
         }
     }
+
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     listOf(
         iosX64(),
@@ -74,37 +77,15 @@ kotlin {
                 implementation(libs.androidx.security.crypto)
             }
         }
-//        val androidTest by getting {
-//            dependencies {
-//                implementation(kotlin("test-junit"))
-//                implementation("junit:junit:4.13.2")
-//            }
-//        }
 
-//        val jvmMain by getting {
-//            kotlin.srcDirs(project.projectDir.resolve("build/src/jvmMain/kotlin"))
-//        }
-
-//        val jsMain by getting {
-//            kotlin.srcDirs(project.projectDir.resolve("build/src/jsMain/kotlin"))
-//        }
-
-        val iosX64Main by getting
-        val iosArm64Main by getting
-        val iosSimulatorArm64Main by getting
         val iosMain by creating {
-            dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
-
             kotlin.srcDirs(project.projectDir.resolve("build/src/iosMain/kotlin"))
         }
     }
 }
 
 android {
-    compileSdk = 33
+    compileSdk = 34
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 26

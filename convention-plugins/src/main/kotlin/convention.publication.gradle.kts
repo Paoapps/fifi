@@ -36,6 +36,15 @@ if (secretPropsFile.exists()) {
 
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
+    // Add some placeholder content to avoid empty JAR issues
+    from(file("${layout.buildDirectory}/javadoc")) {
+        // Ensure the directory exists
+        doFirst {
+            file("${layout.buildDirectory}/javadoc").mkdirs()
+            // Create a placeholder file
+            file("${layout.buildDirectory}/javadoc/placeholder.txt").writeText("This is a placeholder for javadoc")
+        }
+    }
 }
 
 fun getExtraString(name: String) = ext[name]?.toString()
@@ -84,7 +93,28 @@ publishing {
     }
 }
 
+tasks.withType<AbstractPublishToMaven>().configureEach {
+    mustRunAfter(tasks.withType<Sign>())
+}
+
 // Signing artifacts. Signing.* extra properties values will be used
 signing {
-    sign(publishing.publications)
+    val signingKeyId = findProperty("signing.keyId") as String?
+    val signingKey = findProperty("signing.key") as String?
+    val signingPassword = findProperty("signing.password") as String?
+    val secretKeyRingFile = findProperty("signing.secretKeyRingFile") as String?
+
+    if (signingKeyId != null && signingPassword != null) {
+        if (secretKeyRingFile != null) {
+            useInMemoryPgpKeys(
+                file(secretKeyRingFile).readText(),
+                signingPassword
+            )
+        } else {
+            useGpgCmd()
+        }
+        sign(publishing.publications)
+    } else {
+        logger.warn("Signing credentials not found, skipping signing")
+    }
 }

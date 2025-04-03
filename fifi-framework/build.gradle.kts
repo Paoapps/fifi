@@ -3,32 +3,31 @@ plugins {
     id("com.android.library")
     kotlin("plugin.serialization")
     id("convention.publication")
+//    alias(libs.plugins.compose.compiler)
 }
 
 group = "com.paoapps.fifi"
-version = "0.0.31"
+version = "0.0.32"
 
 val ktorVersion = "2.3.11"
-val logbackVersion = "1.2.3"
-val serializationVersion = "1.5.1"
-val coroutinesVersion = "1.6.4"
-val dateTimeVersion = "0.4.0"
-val kermitVersion = "1.0.0"
 val lifecycleVersion = "2.2.0"
 
 kotlin {
+    jvmToolchain(17)
+
     androidTarget {
         publishLibraryVariants("debug", "release")
     }
     
     jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "17"
-        }
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
         }
     }
+
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     listOf(
         iosX64(),
@@ -81,57 +80,28 @@ kotlin {
                 implementation(libs.koin.android)
 
                 implementation(libs.bundles.android)
-                implementation(libs.bundles.android.ui)
             }
 
             kotlin.srcDirs(project.projectDir.resolve("build/src/androidMain/kotlin"))
         }
-//        val androidTest by getting {
-//            dependencies {
-//                implementation(kotlin("test-junit"))
-//                implementation("junit:junit:4.13.2")
-//            }
-//        }
 
-//        val jvmMain by getting {
-//            kotlin.srcDirs(project.projectDir.resolve("build/src/jvmMain/kotlin"))
-//        }
-
-//        val jsMain by getting {
-//            kotlin.srcDirs(project.projectDir.resolve("build/src/jsMain/kotlin"))
-//        }
-
-        val iosX64Main by getting
-        val iosArm64Main by getting
-        val iosSimulatorArm64Main by getting
         val iosMain by creating {
-            dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
-
             kotlin.srcDirs(project.projectDir.resolve("build/src/iosMain/kotlin"))
         }
     }
 }
 
 android {
-    compileSdk = 33
+    compileSdk = 34
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 26
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
     namespace = "com.paoapps.fifi.framework"
-
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
 }
