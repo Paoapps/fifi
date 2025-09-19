@@ -3,6 +3,7 @@
 plugin-android = "8.7.3"
 plugin-kotlin = "2.1.21"
 plugin-gver = "0.42.0"
+plugin-maven-publish = "0.34.0"
 
 compose = "1.3.1"
 composeCompiler = "1.5.14"
@@ -142,3 +143,4 @@ android-ui = [
 #kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "plugin-maven-publish" }
