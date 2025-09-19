@@ -7,8 +7,12 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.native.HiddenFromObjC
 
-class InstantSerializer: KSerializer<Instant> {
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
+object InstantSerializer: KSerializer<Instant> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Instant", PrimitiveKind.LONG)
 
     override fun deserialize(decoder: Decoder) = Instant.fromEpochMilliseconds(decoder.decodeLong())
@@ -16,7 +20,9 @@ class InstantSerializer: KSerializer<Instant> {
     override fun serialize(encoder: Encoder, value: Instant) = encoder.encodeLong(value.toEpochMilliseconds())
 }
 
-class InstantSecondsSerializer: KSerializer<Instant> {
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
+object InstantSecondsSerializer: KSerializer<Instant> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Instant", PrimitiveKind.LONG)
 
     override fun deserialize(decoder: Decoder) = Instant.fromEpochMilliseconds(decoder.decodeLong() * 1000)

@@ -1,29 +1,13 @@
-buildscript {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-    }
-
-    val kotlinVersion = "2.1.0"
-
-    dependencies {
-        classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.5.3")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-        classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
-        classpath(libs.plugin.android)
-        classpath("com.google.android.gms:oss-licenses-plugin:0.10.6")
-    }
+plugins {
+    kotlin("multiplatform") version libs.versions.kotlin apply false
+    id("com.android.library") version libs.versions.plugin.android apply false
+    kotlin("plugin.serialization") version libs.versions.kotlin apply false
+    id("com.vanniktech.maven.publish") version "0.34.0" apply false
 }
 
 allprojects {
     repositories {
         google()
         mavenCentral()
-        mavenLocal()
     }
-}
-
-tasks.register("clean", Delete::class) {
-    delete(rootProject.layout.buildDirectory)
 }
