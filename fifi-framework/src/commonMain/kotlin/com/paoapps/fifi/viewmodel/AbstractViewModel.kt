@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.native.HiddenFromObjC
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.shareIn
@@ -94,6 +95,8 @@ abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewMo
         refresh()
     }
 
+    @HiddenFromObjC
+    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
     fun <R> createRefreshableFlow(data: suspend (refresh: Boolean) -> Flow<R>): Flow<R> {
         return flowRefreshTrigger.flatMapLatest { trigger ->
             val refresh = trigger is FlowRefreshTrigger.Refresh

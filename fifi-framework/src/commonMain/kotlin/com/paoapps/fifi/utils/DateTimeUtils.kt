@@ -1,6 +1,8 @@
 package com.paoapps.fifi.utils
 
 import kotlinx.datetime.*
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.native.HiddenFromObjC
 import kotlin.time.ExperimentalTime
 
 const val ONE_SECOND_MS = 1 * 1000L
@@ -66,6 +68,8 @@ val LocalDate.weekOfYear0: Int
 // copied internal fun from klock
 val LocalDate.weekOfYear1: Int get() = weekOfYear0 + 1
 val LocalDateTime.weekOfYear1 get() = date.weekOfYear1
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
 val Instant.year get() = toLocalDateTime(TimeZone.currentSystemDefault()).year
 
 // copied internal fun from klock
@@ -83,11 +87,17 @@ private fun Int.first(dayOfWeek: DayOfWeek): LocalDate {
 val LocalDate.epochMilliseconds get() = LocalDateTime(year, monthNumber, dayOfMonth, 0, 0, 0, 0).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 
 // Instant.fromEpochMilliseconds is not available on iOS
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
 fun createInstant(epochMilliseconds: Long): Instant = Instant.fromEpochMilliseconds(epochMilliseconds)
 
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
 val Instant.localDate: LocalDate get() = toLocalDateTime(getLocalTimeZone()).date
 val DayOfWeek.isWeekend get() = this == DayOfWeek.SATURDAY || this == DayOfWeek.SUNDAY
 val DayOfWeek.index1Sunday get() = (isoDayNumber % 7) + 1
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
 val LocalDate.toInstant get() = toLocalDateTime.toInstant(getLocalTimeZone())
 val LocalDate.toLocalDateTime get() = LocalDateTime(year, monthNumber, dayOfMonth, 0, 0, 0, 0)
 
