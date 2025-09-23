@@ -14,6 +14,9 @@ kotlin {
                 implementation(libs.multiplatform.settings)
 
                 implementation(libs.blockedcache)
+
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
 

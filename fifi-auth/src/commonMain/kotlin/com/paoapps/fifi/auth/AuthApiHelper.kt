@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.paoapps.fifi.auth
 
 import com.paoapps.fifi.api.ClientApiHelper
@@ -10,10 +12,11 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.datetime.Clock
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 interface TokenDecoder<UserId, AccessTokenClaims: IdentifiableClaims<UserId>, RefreshTokenClaims: Claims> {
     fun accessTokenClaims(accessToken: String): AccessTokenClaims

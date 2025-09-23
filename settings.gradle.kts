@@ -6,6 +6,14 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
+    }
+}
+
 rootProject.name = "FiFi"
 
 include(":fifi-common")

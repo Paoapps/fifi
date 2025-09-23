@@ -6,18 +6,7 @@ import com.paoapps.fifi.utils.ActionHandler
 import com.paoapps.fifi.utils.flow.FlowAdapter
 import com.paoapps.fifi.utils.flow.FlowRefreshTrigger
 import com.paoapps.fifi.utils.flow.wrap
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlin.native.HiddenFromObjC
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import org.koin.core.component.KoinComponent
@@ -95,8 +84,6 @@ abstract class AbstractViewModel<Output, Event: AbstractEvent, Action>(): ViewMo
         refresh()
     }
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
     fun <R> createRefreshableFlow(data: suspend (refresh: Boolean) -> Flow<R>): Flow<R> {
         return flowRefreshTrigger.flatMapLatest { trigger ->
             val refresh = trigger is FlowRefreshTrigger.Refresh

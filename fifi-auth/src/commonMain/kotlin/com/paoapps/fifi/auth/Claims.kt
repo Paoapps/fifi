@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.paoapps.fifi.auth
 
-import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 interface Claims {
     val exp: Instant

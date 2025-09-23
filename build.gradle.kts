@@ -9,6 +9,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        mavenLocal()
     }
 }
 
@@ -42,13 +43,6 @@ subprojects {
             jvm()
 
             sourceSets.apply {
-                commonMain {
-                    dependencies {
-                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-                        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
-                        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-                    }
-                }
                 commonTest {
                     dependencies {
                         implementation(kotlin("test"))
@@ -96,6 +90,9 @@ subprojects {
             compileOptions {
                 sourceCompatibility = JavaVersion.VERSION_11
                 targetCompatibility = JavaVersion.VERSION_11
+            }
+            lint {
+                disable += "NullSafeMutableLiveData"
             }
             namespace = "com.paoapps.fifi.${project.name.replace("-", "")}"
         }

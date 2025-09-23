@@ -1,32 +1,19 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.paoapps.fifi.model
 
-import com.paoapps.blockedcache.BlockedCache
-import com.paoapps.blockedcache.BlockedCacheData
-import com.paoapps.blockedcache.CacheResult
-import com.paoapps.blockedcache.Fetch
-import com.paoapps.blockedcache.FetcherResult
-import com.paoapps.blockedcache.asCacheResult
+import com.paoapps.blockedcache.*
 import com.paoapps.fifi.api.ClientApi
 import com.paoapps.fifi.di.API_STATE_FLOW_QUALIFIER
-import com.paoapps.fifi.log.debug
 import com.paoapps.fifi.model.datacontainer.DataContainer
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Instant
+import kotlinx.coroutines.flow.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import kotlin.native.HiddenFromObjC
 import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
-@HiddenFromObjC
-@OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
-private fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withApiBlockedCacheFlow(
+fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withApiBlockedCacheFlow(
     debugName: String? = null,
     blockedCache: BlockedCache<T>,
     fetch: Fetch,
@@ -39,31 +26,6 @@ private fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withA
     }, predicate, condition) { updatedData, _ ->
         updatedData
     }
-}
-
-fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withApiBlockedCacheFlowSimple(
-    debugName: String? = null,
-    blockedCache: BlockedCache<T>,
-    fetch: Fetch,
-    apiCall: suspend (api: Api, modelData: BlockedCacheData<T>) -> FetcherResult<T>
-): Flow<CacheResult<T>> = apiFlow.flatMapLatest { api ->
-    withBlockedCacheFlow(debugName ?: name, blockedCache, fetch, {
-        apiCall(api, it)
-    }, { _, _ -> true }, flowOf(true)) { updatedData, _ ->
-        updatedData
-    }
-}
-
-fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.withApiBlockedCacheFlowWithProcess(
-    debugName: String? = null,
-    blockedCache: BlockedCache<T>,
-    fetch: Fetch,
-    apiCall: suspend (api: Api, modelData: BlockedCacheData<T>) -> FetcherResult<T>,
-    processData: (responseData: BlockedCacheData<T>, modelData: BlockedCacheData<T>) -> BlockedCacheData<T>
-): Flow<CacheResult<T>> = apiFlow.flatMapLatest { api ->
-    withBlockedCacheFlow(debugName ?: name, blockedCache, fetch, {
-        apiCall(api, it)
-    }, { _, _ -> true }, flowOf(true), processData)
 }
 
 class ModelHelper<ModelData: Any, Api: ClientApi>(
@@ -86,8 +48,6 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
         }.distinctUntilChanged()
     }
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
     fun <T: Any> withApiBlockedCacheFlow(
         debugName: String? = null,
         blockedCache: BlockedCache<T>,
@@ -102,8 +62,6 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
         }, predicate, condition, processData)
     }
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
     fun <T: Any> withApiBlockedCacheFlow(
         debugName: String? = null,
         blockedCache: BlockedCache<T>,
@@ -119,9 +77,7 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
         }, predicate, condition, processData)
     }
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
-    internal fun <T: Any> withBlockedCacheFlow(
+    fun <T: Any> withBlockedCacheFlow(
         debugName: String? = null,
         blockedCache: BlockedCache<T>,
         fetch: Fetch,
@@ -141,9 +97,7 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
             processData = processData
         )
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
-    internal fun <T: Any> withBlockedCacheFlow(
+    fun <T: Any> withBlockedCacheFlow(
         debugName: String? = null,
         blockedCache: BlockedCache<T>,
         forceRefresh: Boolean,
@@ -169,9 +123,7 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
         )
 
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
-    internal fun <T: Any, D> withModelDataFlow(
+    fun <T: Any, D> withModelDataFlow(
         debugName: String? = null,
         apiCall: suspend (modelData: ModelData, processSuccessData: (D) -> Unit) -> Flow<CacheResult<T>>,
         processData: (responseData: D, modelData: ModelData) -> ModelData
@@ -234,9 +186,7 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
         return response
     }
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
-    internal fun <T: Any> createBlockCache(
+    fun <T: Any> createBlockCache(
         duration: Duration,
         expire: Duration?,
         selector: (ModelData) -> BlockedCacheData<T>?,
@@ -255,8 +205,6 @@ class ModelHelper<ModelData: Any, Api: ClientApi>(
     }
 }
 
-@HiddenFromObjC
-@OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
 fun <T: Any, Api: ClientApi> ModelHelper<BlockedCacheData<T>, Api>.createBlockCache(
     duration: Duration,
     expire: Duration?,

@@ -6,7 +6,6 @@ import com.paoapps.fifi.utils.flow.wrap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlin.native.HiddenFromObjC
 
 interface Emitter<A, E> {
     fun event(event: E)
@@ -49,22 +48,16 @@ data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: s
         events.emit(Pair(event, null))
     }
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
     fun <Output, Data> mapToOutput(dataFlow: Flow<Data>, transform: suspend (Data, Emitter<A, E>) -> Output): Flow<Output> =
         flatMapToOutput(dataFlow) { data, emitEvent ->
             flowOf(transform(data, emitEvent))
         }
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
     fun <Output> mapToOutput(transform: (Emitter<A, E>) -> Output): Flow<Output> =
         flatMapToOutput { emitEvent ->
             flowOf(transform(emitEvent))
         }
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
     fun <Output, Data> flatMapToOutput(dataFlow: Flow<Data>, transform: suspend (Data, Emitter<A, E>) -> Flow<Output>): Flow<Output> =
         dataFlow.flatMapConcat { data ->
             val scope = this.scope
@@ -87,8 +80,6 @@ data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: s
             .distinctUntilChanged()
 
 
-    @HiddenFromObjC
-    @OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
     fun <Output> flatMapToOutput(transform: (Emitter<A, E>) -> Flow<Output>): Flow<Output> = flatMapToOutput(flowOf(Unit)) { _, emitEvent ->
         transform(emitEvent)
     }

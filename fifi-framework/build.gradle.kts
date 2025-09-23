@@ -13,6 +13,9 @@ kotlin {
                 implementation(libs.multiplatform.settings)
 
                 implementation(libs.blockedcache)
+
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
 
@@ -22,8 +25,6 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.koin.android)
-
-                implementation(libs.bundles.android)
             }
         }
 
