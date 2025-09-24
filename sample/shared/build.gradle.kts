@@ -7,7 +7,15 @@ plugins {
 val koinVersion = "3.4.3"
 
 kotlin {
-    androidTarget()
+    androidTarget {
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+                }
+            }
+        }
+    }
 
     listOf(
         iosX64(),
@@ -24,7 +32,7 @@ kotlin {
 
     sourceSets {
         val ktorVersion = "2.3.11"
-        val coroutinesVersion = "1.7.3"
+        val coroutinesVersion = "1.10.2"
         val serializationVersion = "1.5.1"
 
         val commonMain by getting {
@@ -34,11 +42,7 @@ kotlin {
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
                 implementation("io.ktor:ktor-client-logging:$ktorVersion")
 
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion") {
-                    version {
-                        strictly(coroutinesVersion)
-                    }
-                }
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
 
@@ -57,7 +61,7 @@ kotlin {
                 implementation(kotlin("test"))
 
                 implementation("io.ktor:ktor-client-mock:$ktorVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
             }
         }
         val androidMain by getting {
@@ -104,7 +108,7 @@ kotlin {
 }
 
 android {
-    compileSdk = 34
+    compileSdk = 35
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 26
@@ -114,6 +118,11 @@ android {
         animationsDisabled = true
     }
     namespace = "com.paoapps.fifi.sample.shared"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
 
     sourceSets {
         named("main") {

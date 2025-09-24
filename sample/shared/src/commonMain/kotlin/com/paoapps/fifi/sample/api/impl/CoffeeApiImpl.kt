@@ -17,10 +17,12 @@ class CoffeeApiImpl(
     override suspend fun hotCoffee(): FetcherResult<List<Coffee>> {
         debug("🔴 request hotCoffee")
         return withinTryCatch {
-            apiHelper.client.get("$baseUrl/hot") {
-                apiHelper.createHeaders(this)
-            }
-                .decodeFromString(ListSerializer(Coffee.serializer()))
+            FetcherResult.Data(
+                apiHelper.client.get("$baseUrl/hot") {
+                    apiHelper.createHeaders(this)
+                }
+                    .decodeFromString(ListSerializer(Coffee.serializer()))
+            )
         }
     }
 

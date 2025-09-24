@@ -10,9 +10,9 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.paoapps.fifi.common.LocalEventHandler
 import com.paoapps.fifi.sample.android.composeui.ViewModelComposable
 import com.paoapps.fifi.sample.viewmodel.HomeViewModel
+import com.paoapps.fifi.sample.viewmodel.LocalEventHandler
 import org.koin.androidx.compose.getViewModel
 
 @Composable

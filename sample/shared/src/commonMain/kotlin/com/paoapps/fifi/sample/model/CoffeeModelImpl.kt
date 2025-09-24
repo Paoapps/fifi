@@ -9,11 +9,14 @@ import com.paoapps.fifi.sample.domain.Coffee
 import com.paoapps.fifi.sample.domain.ModelData
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.qualifier.qualifier
-import kotlin.time.Duration.Companion.minutes
+import org.koin.core.qualifier.named
 
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.ExperimentalTime
+
+@OptIn(ExperimentalTime::class)
 class CoffeeModelImpl: CoffeeModel, KoinComponent {
-    private val modelHelper: ModelHelper<ModelData, Api> by inject(PersistentDataName.MODEL_DATA.qualifier)
+    private val modelHelper: ModelHelper<ModelData, Api> by inject(named(PersistentDataName.MODEL_DATA.name))
 
     private val hotCoffeeCache: BlockedCache<List<Coffee>> = modelHelper.createBlockCache(5.minutes, null, ModelData::hotCoffee, isDebugEnabled = true)
 

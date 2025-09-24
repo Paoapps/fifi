@@ -1,16 +1,16 @@
 plugins {
     id("com.android.application")
     kotlin("android")
-    id("androidx.navigation.safeargs.kotlin")
-    id("com.google.android.gms.oss-licenses-plugin")
+    id("androidx.navigation.safeargs.kotlin") version "2.5.3"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
 }
 
 android {
-    compileSdk = 34
+    compileSdk = 35
     defaultConfig {
         applicationId = "com.paoapps.fifi.sample.android"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -24,6 +24,12 @@ android {
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = "11"
     }
 
     buildFeatures {

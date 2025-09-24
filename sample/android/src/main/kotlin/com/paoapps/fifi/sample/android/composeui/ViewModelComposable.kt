@@ -10,8 +10,8 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import com.paoapps.fifi.common.EventHandler
-import com.paoapps.fifi.common.LocalEventHandler
+import com.paoapps.fifi.sample.viewmodel.EventHandler
+import com.paoapps.fifi.sample.viewmodel.LocalEventHandler
 import com.paoapps.fifi.viewmodel.AbstractEvent
 import com.paoapps.fifi.viewmodel.AbstractViewModel
 
