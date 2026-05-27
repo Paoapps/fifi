@@ -10,6 +10,13 @@ internal actual fun platformInjections(serviceName: String, module: Module) {
         // we don't provide secure settings for JVM
         PreferencesSettings.Factory().create(serviceName)
     }
+
+    // Fallback to the same implementation since it's only needed for iOS
+    module.single<Settings>(named(PlatformModuleQualifier.ENCRYPTED_SETTINGS_FALLBACK)) {
+        // we don't provide secure settings for JVM
+        PreferencesSettings.Factory().create(serviceName)
+    }
+
     module.single<Settings>(named(PlatformModuleQualifier.SETTINGS)) {
         PreferencesSettings.Factory().create(serviceName)
     }

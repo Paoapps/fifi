@@ -17,12 +17,30 @@ interface TokenStore {
     fun deleteCredentials(environment: ModelEnvironment)
 }
 
-class SettingsTokenStore(private val encryptedSettings: Settings): TokenStore {
+class SettingsTokenStore(
+    private val encryptedSettings: Settings,
+    private val fallbackEncryptedSettings: Settings,
+): TokenStore {
 
     override fun loadTokens(environment: ModelEnvironment): Tokens? {
-        debug("Load access token from settings, key=${environment.accessTokenKey}, : ${encryptedSettings.getStringOrNull(environment.accessTokenKey)}")
-        val accessToken = encryptedSettings.getStringOrNull(environment.accessTokenKey) ?: return null
-        val refreshToken = encryptedSettings.getStringOrNull(environment.refreshTokenKey)
+        val accessToken = encryptedSettings.getStringOrNull(environment.accessTokenKey) ?: run {
+            // Fallback to old storage if available
+            val fallbackTokenString = fallbackEncryptedSettings.getStringOrNull(environment.accessTokenKey) ?: return null
+
+            // Migrate to new storage
+            fallbackEncryptedSettings.clear()
+            encryptedSettings[environment.accessTokenKey] = fallbackTokenString
+            fallbackTokenString
+        }
+        val refreshToken = encryptedSettings.getStringOrNull(environment.refreshTokenKey) ?: run {
+            // Fallback to old storage if available
+            val fallbackTokenString = fallbackEncryptedSettings.getStringOrNull(environment.refreshTokenKey) ?: return@run null
+
+            // Migrate to new storage
+            fallbackEncryptedSettings.clear()
+            encryptedSettings[environment.refreshTokenKey] = fallbackTokenString
+            fallbackTokenString
+        }
         return Tokens(accessToken, refreshToken)
     }
 

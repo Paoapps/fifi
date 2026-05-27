@@ -23,6 +23,7 @@ internal expect fun platformInjections(serviceName: String, module: Module)
 
 enum class PlatformModuleQualifier {
     ENCRYPTED_SETTINGS,
+    ENCRYPTED_SETTINGS_FALLBACK,
     SETTINGS
 }
 
@@ -43,7 +44,10 @@ fun <Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaim
             val model: Model<Environment, Api> = get()
             authAppDefinition.authModel (model)
         }
-        single<TokenStore> { SettingsTokenStore(get(named(PlatformModuleQualifier.ENCRYPTED_SETTINGS))) }
+        single<TokenStore> { SettingsTokenStore(
+            get(named(PlatformModuleQualifier.ENCRYPTED_SETTINGS)),
+            get(named(PlatformModuleQualifier.ENCRYPTED_SETTINGS_FALLBACK)),
+        )}
         single {
             authAppDefinition.authentication.tokenDecoder
         }
