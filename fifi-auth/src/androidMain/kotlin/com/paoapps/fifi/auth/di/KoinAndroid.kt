@@ -26,6 +26,18 @@ internal actual fun platformInjections(serviceName: String, module: Module) {
             context.initialiseSecurePrefs(serviceName)
         }
     }
+
+    // Fallback to the same implementation since it's only needed for iOS
+    module.single<Settings>(named(PlatformModuleQualifier.ENCRYPTED_SETTINGS_FALLBACK)) {
+        val context = get() as Context
+        try {
+            context.initialiseSecurePrefs(serviceName)
+        } catch (e: Exception) {
+            context.clearSharedPreferences()
+            context.initialiseSecurePrefs(serviceName)
+        }
+    }
+
     module.single<Settings>(named(PlatformModuleQualifier.SETTINGS)) {
         SharedPreferencesSettings.Factory(get()).create(serviceName)
     }
