@@ -28,7 +28,6 @@ class SettingsTokenStore(
             val fallbackTokenString = fallbackEncryptedSettings.getStringOrNull(environment.accessTokenKey) ?: return null
 
             // Migrate to new storage
-            fallbackEncryptedSettings.clear()
             encryptedSettings[environment.accessTokenKey] = fallbackTokenString
             fallbackTokenString
         }
@@ -37,10 +36,11 @@ class SettingsTokenStore(
             val fallbackTokenString = fallbackEncryptedSettings.getStringOrNull(environment.refreshTokenKey) ?: return@run null
 
             // Migrate to new storage
-            fallbackEncryptedSettings.clear()
             encryptedSettings[environment.refreshTokenKey] = fallbackTokenString
             fallbackTokenString
         }
+        // Clear fallback after both tokens have been migrated
+        fallbackEncryptedSettings.clear()
         return Tokens(accessToken, refreshToken)
     }
 
