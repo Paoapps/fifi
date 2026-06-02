@@ -39,7 +39,15 @@ subprojects {
             iosX64()
             iosArm64()
             iosSimulatorArm64()
-            jvm()
+            jvm {
+                compilations.all {
+                    compileTaskProvider.configure {
+                        compilerOptions {
+                            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+                        }
+                    }
+                }
+            }
 
             sourceSets.apply {
                 commonTest {
