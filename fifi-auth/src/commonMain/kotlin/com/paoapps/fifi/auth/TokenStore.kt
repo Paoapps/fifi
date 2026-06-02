@@ -27,20 +27,30 @@ class SettingsTokenStore(
             // Fallback to old storage if available
             val fallbackTokenString = fallbackEncryptedSettings.getStringOrNull(environment.accessTokenKey) ?: return null
 
+            // Remove from fallback first so the keychain item is deleted before re-adding with new accessibility
+            fallbackEncryptedSettings.remove(environment.accessTokenKey)
             // Migrate to new storage
-            encryptedSettings[environment.accessTokenKey] = fallbackTokenString
+            try {
+                encryptedSettings[environment.accessTokenKey] = fallbackTokenString
+            } catch (_: Exception) {
+                // Keychain write may fail; return token from fallback without migrating
+            }
             fallbackTokenString
         }
         val refreshToken = encryptedSettings.getStringOrNull(environment.refreshTokenKey) ?: run {
             // Fallback to old storage if available
             val fallbackTokenString = fallbackEncryptedSettings.getStringOrNull(environment.refreshTokenKey) ?: return@run null
 
+            // Remove from fallback first so the keychain item is deleted before re-adding with new accessibility
+            fallbackEncryptedSettings.remove(environment.refreshTokenKey)
             // Migrate to new storage
-            encryptedSettings[environment.refreshTokenKey] = fallbackTokenString
+            try {
+                encryptedSettings[environment.refreshTokenKey] = fallbackTokenString
+            } catch (_: Exception) {
+                // Keychain write may fail; return token from fallback without migrating
+            }
             fallbackTokenString
         }
-        // Clear fallback after both tokens have been migrated
-        fallbackEncryptedSettings.clear()
         return Tokens(accessToken, refreshToken)
     }
 
