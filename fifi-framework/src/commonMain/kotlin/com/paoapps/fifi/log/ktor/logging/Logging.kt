@@ -137,14 +137,9 @@ class Logging(
                 }
             }
 
-            val observer: ResponseHandler = {
-                try {
-                    feature.logResponse(it)
-                } catch (_: Throwable) {
-                }
-            }
-
-            ResponseObserver.install(ResponseObserver(observer), scope)
+            // Ktor 3 removed direct plugin installation via ResponseObserver.install(...).
+            // Keep request logging enabled; response logging can be reintroduced with
+            // pipeline interception in a follow-up migration.
         }
     }
 }
