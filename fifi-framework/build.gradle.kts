@@ -1,5 +1,10 @@
 kotlin {
     sourceSets {
+        commonTest {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
         commonMain {
             dependencies {
                 implementation(project(":fifi-common"))
@@ -24,6 +29,8 @@ kotlin {
                 implementation(libs.ktor.client.okHttp)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.androidx.lifecycle.runtime.compose)
+                implementation(libs.androidx.compose.runtime)
                 implementation(libs.koin.android)
             }
         }

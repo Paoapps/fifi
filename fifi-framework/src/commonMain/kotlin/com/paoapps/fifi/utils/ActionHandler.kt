@@ -20,9 +20,6 @@ data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: s
     val actionsFlow = MutableSharedFlow<A>()
     val actions = FlowAdapter(scope, actionsFlow.asSharedFlow())
 
-    private val _links = MutableSharedFlow<String>()
-    val links = _links.asSharedFlow().wrap(scope)
-
     val events = MutableSharedFlow<Pair<E, Any?>>()
 
     private val _confirmationDialogs = MutableSharedFlow<ConfirmationDialogDefinition.Properties<E>>()
@@ -31,7 +28,6 @@ data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: s
     sealed interface EventResult<A, E> {
         data class Event<A, E>(val event: E): EventResult<A, E>
         data class Action<A, E>(val action: A): EventResult<A, E>
-//        data class Link<A, E>(val link: String): EventResult<A, E>
         data class ConfirmationDialog<A, E>(val confirmationDialog: ConfirmationDialogDefinition.Properties<E>): EventResult<A, E>
         data class Global<A, E>(val action: Any): EventResult<A, E>
     }
@@ -107,7 +103,6 @@ data class ActionHandler<A, E>(val scope: CoroutineScope, private val handler: s
         when(val result = handler(event, input)) {
             is EventResult.Action -> actionsFlow.emit(result.action)
             is EventResult.Event -> handleEvent(result.event, input)
-//            is EventResult.Link -> _links.emit(result.link)
             is EventResult.ConfirmationDialog -> _confirmationDialogs.emit(result.confirmationDialog)
             is EventResult.Global -> globalActionsFlow.emit(result.action)
             null -> {}
