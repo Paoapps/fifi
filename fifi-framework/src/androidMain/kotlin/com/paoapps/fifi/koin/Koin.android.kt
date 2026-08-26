@@ -11,7 +11,8 @@ import com.paoapps.fifi.model.Model
 import com.paoapps.fifi.model.ModelEnvironment
 import com.paoapps.fifi.model.ModelEnvironmentFactory
 import com.paoapps.fifi.model.datacontainer.CDataContainer
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
@@ -37,6 +38,8 @@ class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
     private val context: Context
 ): KoinComponent {
 
+    private val persistenceScope = CoroutineScope(SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+
     private val model: Model<Environment, Api> by inject()
 
     private var persistAppModelJobs: Map<String, Job> = mutableMapOf()
@@ -60,7 +63,7 @@ class AndroidApp<Environment: ModelEnvironment, Api: ClientApi>(
                 }.collect { environment ->
                     val name = "${environment.name}-$dataName"
                     persistAppModelJobs[dataName]?.cancel()
-                    persistAppModelJobs = persistAppModelJobs.plus(name to GlobalScope.launch {
+                    persistAppModelJobs = persistAppModelJobs.plus(name to persistenceScope.launch {
                         delay(1000L)
                         dataContainer.persist(name)
                     })

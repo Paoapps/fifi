@@ -33,39 +33,3 @@ fun <T> Flow<T>.internalDebug(message: String, describeValue: (T) -> (String) = 
         "Completed ${message}: $exception"
     )
 }
-
-private data class Poll(val delayTime: Duration, val initial: Boolean = false)
-
-// TODO: implement when needed
-//fun <T: CacheResult<D>, D> Flow<T>.poll(
-//    delayDuration: Duration = 1.minutes,
-//    errorDelayDuration: Duration = 5.seconds,
-//    delayFactor: Int = 2
-//): Flow<T> {
-//    var currentErrorDelay = errorDelayDuration
-//    val delayDurationFlow = MutableStateFlow(Poll(delayTime = delayDuration, initial = true))
-//    return delayDurationFlow
-//        .flatMapLatest { poll ->
-//            flow {
-//                if (poll.initial) {
-//                    emit(Unit)
-//                }
-//                while(true) {
-//                    delay(poll.delayTime)
-//                    emit(Unit)
-//                }
-//            }
-//        }
-//        .flatMapLatest {
-//            this.map {
-//                if (it.isFailure) {
-//                    delayDurationFlow.value = Poll(currentErrorDelay)
-//                    currentErrorDelay *= delayFactor
-//                } else if (it.isSuccess) {
-//                    delayDurationFlow.value = Poll(delayDuration)
-//                    currentErrorDelay = errorDelayDuration
-//                }
-//                it
-//            }
-//        }
-//}

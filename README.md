@@ -1,75 +1,94 @@
 # FiFi: Kotlin Multiplatform Mobile Framework
 
-FiFi is a Kotlin Multiplatform Mobile (KMM) framework designed to facilitate maximum code sharing between iOS and Android, focusing on almost everything except UI and navigation code. With FiFi, you can write network requests, caching mechanisms, view models, business logic, and event handling all in shared code, allowing for a seamless development experience across platforms.
+FiFi is a Kotlin Multiplatform (KMP) framework for sharing mobile app logic between iOS and Android: ViewModels, data models, caching, API clients, and optional token auth. UI and navigation stay in platform code (Compose / SwiftUI).
 
-## EARLY DEVELOPMENT!
+**Current version:** `0.0.45` (see [CHANGELOG.md](CHANGELOG.md))
 
-FiFi is currently in early development. The API is not stable and is subject to change. We are actively working on the framework and will be working on documentation and examples in the near future.
+## Modules
 
-We encourage you to try out FiFi and provide feedback. If you have any questions, please reach out to us.
+| Module | Maven artifact | Use when |
+|--------|----------------|----------|
+| **fifi-common** | `com.paoapps.fifi:fifi-common` | Shared types with a Ktor server (amounts, tokens, JSON helpers) |
+| **fifi-framework** | `com.paoapps.fifi:fifi-framework` | Any KMP mobile app (ViewModels, Model, caching, DI bootstrap) |
+| **fifi-auth** | `com.paoapps.fifi:fifi-auth` | Apps with token-based authentication |
 
-## Key Features
-* **Maximum Code Sharing**: Write most of your app logic once and run on both iOS and Android.
-* **Built on Proven Libraries**: Utilizes Kotlin serialization, Kotlin date time, Ktor, and Koin.
-* **Two-Module Architecture**: `fifi-common` can be shared with projects like a Ktor-based server, while `fifi-framework` is dedicated for mobile apps.
-* **Highly Compatible with Modern UI**: Tailored to work efficiently with SwiftUI and Compose.
-
-## Prerequisites
-* Kotlin version 2.1.0
-* Familiarity with Kotlin Multiplatform Mobile setup [KMM Getting Started](https://kotlinlang.org/docs/multiplatform-mobile-getting-started.html)
-* Strong recommendation to use SwiftUI for iOS and Compose for Android.
-
-## What is FiFi?
-
-FiFi is a great fit for apps that communicate with a server (optionally with token based authentication) and need to cache some of that data. Based on that data, view models can be created and used to drive the UI automatically.
-
-### View Models
-
-The framework lets your create shared view models in Kotlin. These view models define in an **Output** data class what a view needs to display. It also provides **Event**s that the UI can send to the view model. The view model can then react to these events and update the output accordingly. Whenever the output changes, the UI is automatically updated. Whenever the UI needs to react to an event, the view model is notified through an **Action**.
-
-### Models
-
-View Models get their data through Models. Models are responsible for determining when to fetch data from the server and when to use cached data. A view model generally only indicates what data it needs and the model will take care of the rest.
-
-### Caching
-
-Models keep a cache of a single data structure tree in memory. This acts as the single source of truth for the app. Whenever a view model needs data, it can request it from the model. The model will then either return the cached data or fetch it from the server. The model also keeps track of the last time it fetched data from the server. If the data is older than a certain threshold, the model will automatically fetch new data from the server. Besides having the cache in memory it allows iOS and Android implementations to store the cache on disk as well.
-
-### API's
-
-The framework provides a way to define API's in Kotlin. These API's can be used to make network requests to a server. The framework provides a way to automatically parse the response from the server into Kotlin data classes. The framework also provides a way to automatically parse errors from the server into Kotlin data classes. This allows you to define a single API for both iOS and Android and use it in your shared code.
-
-### Authentication
-
-The framework provides a way to authenticate with a server using tokens. It provides a way to automatically refresh tokens when they expire. Authentication is optional and can be enabled by using the `fifi-auth` module.
-
-## Installation
-
-Set up a Kotlin Multiplatform Mobile (KMM) project as outlined [here](https://kotlinlang.org/docs/multiplatform-mobile-getting-started.html).
-
-In your shared module, create a dependency to the `fifi-framework` library.
+**Peer dependency:** [blocked-cache](https://github.com/Paoapps/blocked-cache) (`com.paoapps.blockedcache:blocked-cache`) — used by `ModelHelper` for fetch/cache flows.
 
 ```kotlin
-implementation("com.paoapps.fifi:fifi-framework:0.0.36-SNAPSHOT-41")
+// build.gradle.kts (shared module)
+implementation("com.paoapps.fifi:fifi-framework:0.0.45")
+implementation("com.paoapps.blockedcache:blocked-cache:0.0.10")
 ```
 
-## Setup
+## Quick start
 
-Implement an `initApp` function in your shared code. This function should be called from both Android and iOS main entry points.
+1. Implement [`AppDefinition`](fifi-framework/src/commonMain/kotlin/com/paoapps/fifi/di/Koin.kt) — environment factory, API factory, Model, Koin modules.
+2. Call `initKoinApp(appDefinition)` from Android/iOS entry points (Android: `com.paoapps.fifi.koin.initKoinApp(context, …)`).
+3. Create ViewModels extending `AbstractViewModel<Output, Event, Action>`.
+4. Bind platform UI to `output`, `action`, and `emitEvent()`.
+
+See [docs/getting-started.md](docs/getting-started.md) for a full checklist. The [sample app](sample/) demonstrates a non-auth setup.
+
+## Core concepts
+
+### ViewModel (Output / Event / Action)
+
+- **Output** — UI state (`Flow` / `FlowAdapter`)
+- **Event** — user input via `emitEvent()`
+- **Action** — one-shot navigation or side effects
+
+Helpers: `viewModelOutput()`, `createRefreshableFetchFlow()`, `ActionHandler`.
+
+### Model + caching
+
+Models fetch and cache data via `ModelHelper` and **blocked-cache**. ViewModels request data; Models decide cache vs network.
+
+### Loadable
+
+`com.paoapps.fifi.loading.Loadable` maps `CacheResult` to a UI-agnostic loading/error/data wrapper. Apps map it to their own error components.
+
+### Testing
+
 ```kotlin
-fun <ModelData, Environment: ModelEnvironment, UserId, AccessTokenClaims: IdentifiableClaims, RefreshTokenClaims: Claims, ServerError, Api: ClientApi<AccessTokenClaims>> initKoinShared(
-    serviceName: String,
-    sharedAppModule: Module,
-    model: () -> Model<ModelData, AccessTokenClaims, Environment, UserId, Api>,
-    tokenDecoder: TokenDecoder<AccessTokenClaims, RefreshTokenClaims>,
-    authApi: (scope: Scope) -> AuthApi<ServerError>,
-    languageProvider: LanguageProvider,
-    stringsProvider: CommonStringsProvider,
-    serverErrorParser: ServerErrorParser<ServerError>,
-    appDeclaration: KoinAppDeclaration = {}
-)
+import com.paoapps.fifi.viewmodel.testOutput
+import com.paoapps.fifi.viewmodel.testActions
+
+viewModel.testOutput { /* assert on Output */ }
+viewModel.testActions { emit -> emit(MyEvent.Tap) }
 ```
 
-# Contributing
+## Auth apps
 
-We welcome contributions to FiFi. Please read our [contributing guide](CONTRIBUTING.md) for more information.
+Use `fifi-auth`: implement `AuthAppDefinition`, `TokenDecoder`, and call `com.paoapps.fifi.auth.di.initKoinApp`. See [docs/auth-setup.md](docs/auth-setup.md).
+
+## iOS notes
+
+- ViewModels use a custom scope; call `viewModel.clear()` when the screen is dismissed (see [docs/ios-integration.md](docs/ios-integration.md)).
+- Disk persistence for `DataContainer` is Android-only in-framework; iOS apps provide their own storage bridge.
+
+## Documentation
+
+| Doc | Description |
+|-----|-------------|
+| [Getting started](docs/getting-started.md) | Bootstrap checklist |
+| [Architecture](docs/architecture.md) | Module and data-flow overview |
+| [Auth setup](docs/auth-setup.md) | fifi-auth integration |
+| [iOS integration](docs/ios-integration.md) | SwiftUI bridge, lifecycle, persistence |
+| [Framework vs app](docs/decisions/001-framework-vs-app-boundary.md) | What belongs in FiFi vs your app |
+| [Compatibility](docs/compatibility.md) | Versioning policy |
+| [Upgrading](docs/upgrading.md) | Consumer upgrade notes |
+
+## Sample app
+
+- **Android:** `sample/android` — Compose UI wired to shared ViewModels
+- **iOS:** `sample/iosApp` — SwiftUI reference (see README in that folder)
+
+Run Android sample: `./gradlew :sample:android:installDebug`
+
+## Publishing
+
+Released to Maven Central on GitHub release. Version in `gradle.properties`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
