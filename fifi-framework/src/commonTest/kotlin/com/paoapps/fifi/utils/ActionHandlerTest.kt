@@ -3,6 +3,9 @@ package com.paoapps.fifi.utils
 import com.paoapps.fifi.ui.component.ConfirmationDialogDefinition
 import com.paoapps.fifi.viewmodel.AbstractEvent
 import com.paoapps.fifi.viewmodel.VoidEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,14 +23,21 @@ class ActionHandlerTest {
 
     @Test
     fun toOutputUsesEmitter() = runBlocking {
-        val handler = ActionHandler<TestAction, TestEvent>(this) { _, _ -> null }
+        // ActionHandler launches an infinite events.collect job on the given scope;
+        // use a child scope we can cancel so runBlocking can complete.
+        val scope = CoroutineScope(coroutineContext + SupervisorJob())
+        try {
+            val handler = ActionHandler<TestAction, TestEvent>(scope) { _, _ -> null }
 
-        val output = handler.toOutput { emitter ->
-            emitter.action(TestAction.Navigate)
-            "done"
+            val output = handler.toOutput { emitter ->
+                emitter.action(TestAction.Navigate)
+                "done"
+            }
+
+            assertEquals("done", output)
+        } finally {
+            scope.cancel()
         }
-
-        assertEquals("done", output)
     }
 
     @Test
