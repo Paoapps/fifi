@@ -1,6 +1,5 @@
 package com.paoapps.fifi.loading
 
-import com.paoapps.blockedcache.CacheResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -24,32 +23,33 @@ class LoadableTest {
     }
 
     @Test
-    fun cacheResultSuccessMapsToData() {
-        val result = CacheResult.Success("value")
-        val loadable = result.asLoadable(loadingPlaceholder = "loading")
-        assertEquals("value", loadable.data)
-        assertFalse(loadable.isLoading)
-    }
-
-    @Test
-    fun cacheResultLoadingMapsToLoadingPlaceholder() {
-        val result = CacheResult.Loading(null, 0L)
-        val loadable = result.asLoadable(loadingPlaceholder = "loading")
-        assertEquals("loading", loadable.data)
-        assertTrue(loadable.isLoading)
-    }
-
-    @Test
-    fun cacheResultOfflineMapsToOffline() {
-        val result = CacheResult.Offline(null, 0L)
-        val loadable = result.asLoadable<String>(loadingPlaceholder = null)
-        assertNull(loadable.data)
-        assertTrue(loadable.result is Loadable.Result.Offline)
+    fun errorAndOfflineHaveNoData() {
+        assertNull(Loadable.error<String>(message = "boom").data)
+        assertTrue(Loadable.error<String>().result.isError)
+        assertNull(Loadable.offline<String>().data)
+        assertTrue(Loadable.offline<String>().result is Loadable.Result.Offline)
+        assertNull(Loadable.empty<String>().data)
     }
 
     @Test
     fun mapTransformsData() {
         val loadable = Loadable.data(2).map { it * 2 }
         assertEquals(4, loadable.data)
+        assertFalse(loadable.isLoading)
+    }
+
+    @Test
+    fun mapPreservesError() {
+        val loadable = Loadable.error<Int>(message = "fail").map { it * 2 }
+        assertNull(loadable.data)
+        assertTrue(loadable.result is Loadable.Result.Error)
+    }
+
+    @Test
+    fun asLoadableListWrapsItems() {
+        val list = listOf("a", "b").asLoadableList()
+        assertEquals(2, list.size)
+        assertEquals("a", list[0].data)
+        assertEquals("b", list[1].data)
     }
 }
